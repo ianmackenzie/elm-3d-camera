@@ -233,7 +233,12 @@ view model =
             , Attributes.style [ ( "display", "block" ) ]
             , Events.on "mousedown" (Mouse.position |> Decode.map StartRotating)
             ]
-            [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ] vertexShader fragmentShader cubeMesh uniforms ]
+            [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ]
+                vertexShader
+                fragmentShader
+                cubeMesh
+                uniforms
+            ]
 
 
 rotate : Frame3d -> Int -> Int -> Frame3d
