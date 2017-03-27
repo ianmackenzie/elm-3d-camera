@@ -2,6 +2,8 @@ module OpenSolid.WebGL.Triangle3d
     exposing
         ( mesh
         , meshWith
+        , indexedMesh
+        , indexedMeshWith
         )
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -30,6 +32,16 @@ mesh =
 meshWith : (Triangle3d -> ( a, a, a )) -> List Triangle3d -> Mesh a
 meshWith attributes =
     WebGL.triangles << List.map attributes
+
+
+indexedMesh : List Point3d -> List ( Int, Int, Int ) -> Mesh { vertexPosition : Vec3 }
+indexedMesh =
+    indexedMeshWith vertexPositionAttribute
+
+
+indexedMeshWith : (Point3d -> a) -> List Point3d -> List ( Int, Int, Int ) -> Mesh a
+indexedMeshWith attributes points faces =
+    WebGL.indexedTriangles (List.map attributes points) faces
 
 
 fan : List Point3d -> Mesh { vertexPosition : Vec3 }
