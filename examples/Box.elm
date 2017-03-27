@@ -76,9 +76,9 @@ positionsAndNormals triangle =
                 |> Maybe.withDefault Vector3d.zero
                 |> Vector3d.toVec3
     in
-        ( Attributes (Point3d.toVec3 p1) normalVector
-        , Attributes (Point3d.toVec3 p2) normalVector
-        , Attributes (Point3d.toVec3 p3) normalVector
+        ( { vertexPosition = Point3d.toVec3 p1, vertexNormal = normalVector }
+        , { vertexPosition = Point3d.toVec3 p2, vertexNormal = normalVector }
+        , { vertexPosition = Point3d.toVec3 p3, vertexNormal = normalVector }
         )
 
 
