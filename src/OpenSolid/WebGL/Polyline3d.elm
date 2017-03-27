@@ -11,9 +11,9 @@ import WebGL exposing (Mesh)
 import Math.Vector3 exposing (Vec3)
 
 
-mesh : Polyline3d -> Mesh { position : Vec3 }
+mesh : Polyline3d -> Mesh { vertexPosition : Vec3 }
 mesh =
-    meshWith (\point -> { position = Point3d.toVec3 point })
+    meshWith (\point -> { vertexPosition = Point3d.toVec3 point })
 
 
 meshWith : (Point3d -> a) -> Polyline3d -> Mesh a

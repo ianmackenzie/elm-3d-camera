@@ -11,12 +11,12 @@ import WebGL exposing (Mesh)
 import Math.Vector3 exposing (Vec3)
 
 
-mesh : List LineSegment3d -> Mesh { position : Vec3 }
+mesh : List LineSegment3d -> Mesh { vertexPosition : Vec3 }
 mesh =
     meshWith
         (\(LineSegment3d ( p1, p2 )) ->
-            ( { position = Point3d.toVec3 p1 }
-            , { position = Point3d.toVec3 p2 }
+            ( { vertexPosition = Point3d.toVec3 p1 }
+            , { vertexPosition = Point3d.toVec3 p2 }
             )
         )
 
