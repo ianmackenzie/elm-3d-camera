@@ -291,8 +291,13 @@ update message model =
 
                         rotatedFrame =
                             rotate model.boxFrame dx dy
+
+                        updatedModel =
+                            { boxFrame = rotatedFrame
+                            , rotation = Rotating newPosition
+                            }
                     in
-                        ( { model | boxFrame = rotatedFrame, rotation = Rotating newPosition }, Cmd.none )
+                        ( updatedModel, Cmd.none )
 
                 NotRotating ->
                     ( model, Cmd.none )
