@@ -155,8 +155,8 @@ init =
     let
         initialFrame =
             Frame3d.xyz
-                |> Frame3d.rotateAround Axis3d.z (degrees 10)
-                |> Frame3d.rotateAround Axis3d.y (degrees 10)
+                |> Frame3d.rotateAround Axis3d.z (degrees -30)
+                |> Frame3d.rotateAround Axis3d.y (degrees 20)
 
         model =
             { boxFrame = initialFrame
