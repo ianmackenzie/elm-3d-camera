@@ -38,7 +38,7 @@ type Msg
 
 
 type alias Model =
-    { boxFrame : Frame3d
+    { cubeFrame : Frame3d
     , lastRotationPoint : Maybe Point2d
     }
 
@@ -143,7 +143,7 @@ init =
                 |> Frame3d.rotateAround Axis3d.y (degrees 20)
 
         model =
-            { boxFrame = initialFrame
+            { cubeFrame = initialFrame
             , lastRotationPoint = Nothing
             }
     in
@@ -223,7 +223,7 @@ view model =
     let
         uniforms =
             { projectionMatrix = projectionMatrix
-            , modelMatrix = Frame3d.modelMatrix model.boxFrame
+            , modelMatrix = Frame3d.modelMatrix model.cubeFrame
             , viewMatrix = Frame3d.viewMatrix eyeFrame
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = Color.toVec4 (Color.rgb 51 77 230)
@@ -303,10 +303,10 @@ update message model =
                                 (Point2d.vectorFrom lastPoint newPoint)
 
                         rotatedFrame =
-                            rotate model.boxFrame dx -dy
+                            rotate model.cubeFrame dx -dy
 
                         updatedModel =
-                            { boxFrame = rotatedFrame
+                            { cubeFrame = rotatedFrame
                             , lastRotationPoint = Just newPoint
                             }
                     in
