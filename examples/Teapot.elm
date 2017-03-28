@@ -1,4 +1,4 @@
-module Box exposing (..)
+module Teapot exposing (..)
 
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Frame3d as Frame3d
