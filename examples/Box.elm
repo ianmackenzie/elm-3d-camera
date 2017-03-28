@@ -24,7 +24,9 @@ import Math.Matrix4 exposing (Mat4)
 import WebGL exposing (Mesh)
 import WebGL.Settings
 import Mouse
+import Task
 import Color
+import Window
 import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
@@ -35,11 +37,13 @@ type Msg
     = StartRotatingAt Point2d
     | PointerMovedTo Point2d
     | StopRotating
+    | WindowResized Window.Size
 
 
 type alias Model =
     { cubeFrame : Frame3d
     , lastRotationPoint : Maybe Point2d
+    , windowSize : Maybe Window.Size
     }
 
 
@@ -124,17 +128,7 @@ eyeFrame =
         }
 
 
-viewportWidth : Int
-viewportWidth =
-    1024
-
-
-viewportHeight : Int
-viewportHeight =
-    768
-
-
-init : ( Model, Cmd msg )
+init : ( Model, Cmd Msg )
 init =
     let
         initialFrame =
@@ -145,9 +139,10 @@ init =
         model =
             { cubeFrame = initialFrame
             , lastRotationPoint = Nothing
+            , windowSize = Nothing
             }
     in
-        ( model, Cmd.none )
+        ( model, Task.perform WindowResized Window.size )
 
 
 vertexShader : WebGL.Shader Attributes Uniforms Varyings
@@ -187,13 +182,22 @@ fragmentShader =
     |]
 
 
-projectionMatrix : Mat4
-projectionMatrix =
-    Math.Matrix4.makePerspective
-        30
-        (toFloat viewportWidth / toFloat viewportHeight)
-        0.1
-        100
+projectionMatrix : Window.Size -> Mat4
+projectionMatrix { width, height } =
+    let
+        fovY =
+            30
+
+        aspectRatio =
+            toFloat width / toFloat height
+
+        zNear =
+            0.1
+
+        zFar =
+            100
+    in
+        Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
 
 
 lightDirection : Direction3d
@@ -220,40 +224,48 @@ touchToPoint { clientX, clientY } =
 
 view : Model -> Html Msg
 view model =
-    let
-        uniforms =
-            { projectionMatrix = projectionMatrix
-            , modelMatrix = Frame3d.modelMatrix model.cubeFrame
-            , viewMatrix = Frame3d.viewMatrix eyeFrame
-            , lightDirection = Direction3d.toVec3 lightDirection
-            , faceColor = Color.toVec4 (Color.rgb 51 77 230)
-            }
-    in
-        WebGL.toHtmlWith [ WebGL.clearColor 0 0 0 1 ]
-            [ Attributes.width viewportWidth
-            , Attributes.height viewportHeight
-            , Attributes.style [ ( "display", "block" ) ]
-            , Events.on "mousedown"
-                (mousePositionDecoder |> Decode.map StartRotatingAt)
-            , SingleTouch.onSingleTouch TouchStart
-                Touch.preventAndStop
-                (.touch >> touchToPoint >> StartRotatingAt)
-            , SingleTouch.onSingleTouch TouchMove
-                Touch.preventAndStop
-                (.touch >> touchToPoint >> PointerMovedTo)
-            , SingleTouch.onSingleTouch TouchEnd
-                Touch.preventAndStop
-                (always StopRotating)
-            , SingleTouch.onSingleTouch TouchCancel
-                Touch.preventAndStop
-                (always StopRotating)
-            ]
-            [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ]
-                vertexShader
-                fragmentShader
-                cubeMesh
-                uniforms
-            ]
+    case model.windowSize of
+        Just windowSize ->
+            let
+                uniforms =
+                    { projectionMatrix = projectionMatrix windowSize
+                    , modelMatrix = Frame3d.modelMatrix model.cubeFrame
+                    , viewMatrix = Frame3d.viewMatrix eyeFrame
+                    , lightDirection = Direction3d.toVec3 lightDirection
+                    , faceColor = Color.toVec4 (Color.rgb 51 77 230)
+                    }
+
+                rotationAttributes =
+                    [ Events.on "mousedown"
+                        (mousePositionDecoder |> Decode.map StartRotatingAt)
+                    , SingleTouch.onSingleTouch TouchStart
+                        Touch.preventAndStop
+                        (.touch >> touchToPoint >> StartRotatingAt)
+                    , SingleTouch.onSingleTouch TouchMove
+                        Touch.preventAndStop
+                        (.touch >> touchToPoint >> PointerMovedTo)
+                    , SingleTouch.onSingleTouch TouchEnd
+                        Touch.preventAndStop
+                        (always StopRotating)
+                    , SingleTouch.onSingleTouch TouchCancel
+                        Touch.preventAndStop
+                        (always StopRotating)
+                    ]
+            in
+                WebGL.toHtmlWith [ WebGL.clearColor 0 0 0 1 ]
+                    (Attributes.width windowSize.width
+                        :: Attributes.height windowSize.height
+                        :: rotationAttributes
+                    )
+                    [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ]
+                        vertexShader
+                        fragmentShader
+                        cubeMesh
+                        uniforms
+                    ]
+
+        Nothing ->
+            Html.text ""
 
 
 rotate : Frame3d -> Float -> Float -> Frame3d
@@ -306,8 +318,9 @@ update message model =
                             rotate model.cubeFrame dx -dy
 
                         updatedModel =
-                            { cubeFrame = rotatedFrame
-                            , lastRotationPoint = Just newPoint
+                            { model
+                                | cubeFrame = rotatedFrame
+                                , lastRotationPoint = Just newPoint
                             }
                     in
                         ( updatedModel, Cmd.none )
@@ -315,18 +328,25 @@ update message model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        WindowResized windowSize ->
+            ( { model | windowSize = Just windowSize }, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.lastRotationPoint of
-        Just _ ->
-            Sub.batch
-                [ Mouse.moves (mousePositionToPoint >> PointerMovedTo)
-                , Mouse.ups (always StopRotating)
-                ]
+    let
+        dragSubscriptions =
+            case model.lastRotationPoint of
+                Just _ ->
+                    Sub.batch
+                        [ Mouse.moves (mousePositionToPoint >> PointerMovedTo)
+                        , Mouse.ups (always StopRotating)
+                        ]
 
-        Nothing ->
-            Sub.none
+                Nothing ->
+                    Sub.none
+    in
+        Sub.batch [ dragSubscriptions, Window.resizes WindowResized ]
 
 
 main : Program Never Model Msg
