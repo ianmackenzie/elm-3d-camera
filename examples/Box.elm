@@ -16,6 +16,8 @@ import OpenSolid.WebGL.Frame3d as Frame3d
 import OpenSolid.WebGL.Vector3d as Vector3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
+import Touch exposing (Touch, TouchEvent(..))
+import SingleTouch
 import Math.Vector3 exposing (Vec3)
 import Math.Matrix4 exposing (Mat4)
 import WebGL exposing (Mesh)
@@ -24,23 +26,18 @@ import Mouse
 import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
 
 
 type Msg
-    = StartRotating Mouse.Position
-    | MouseMoved Mouse.Position
+    = StartRotatingAt Point2d
+    | PointerMovedTo Point2d
     | StopRotating
-
-
-type Rotation
-    = NotRotating
-    | Rotating Mouse.Position
 
 
 type alias Model =
     { boxFrame : Frame3d
-    , rotation : Rotation
+    , lastRotationPoint : Maybe Point2d
     }
 
 
@@ -160,10 +157,10 @@ init =
 
         model =
             { boxFrame = initialFrame
-            , rotation = NotRotating
+            , lastRotationPoint = Nothing
             }
     in
-        ( { boxFrame = initialFrame, rotation = NotRotating }, Cmd.none )
+        ( model, Cmd.none )
 
 
 vertexShader : WebGL.Shader Attributes Uniforms Varyings
@@ -217,6 +214,21 @@ lightDirection =
         |> Maybe.withDefault (Direction3d.flip Direction3d.z)
 
 
+mousePositionToPoint : Mouse.Position -> Point2d
+mousePositionToPoint { x, y } =
+    Point2d ( toFloat x, toFloat y )
+
+
+mousePositionDecoder : Decoder Point2d
+mousePositionDecoder =
+    Mouse.position |> Decode.map mousePositionToPoint
+
+
+touchToPoint : Touch -> Point2d
+touchToPoint { clientX, clientY } =
+    Point2d ( clientX, clientY )
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -231,7 +243,20 @@ view model =
             [ Attributes.width viewportWidth
             , Attributes.height viewportHeight
             , Attributes.style [ ( "display", "block" ) ]
-            , Events.on "mousedown" (Mouse.position |> Decode.map StartRotating)
+            , Events.on "mousedown"
+                (mousePositionDecoder |> Decode.map StartRotatingAt)
+            , SingleTouch.onSingleTouch TouchStart
+                Touch.preventAndStop
+                (.touch >> touchToPoint >> StartRotatingAt)
+            , SingleTouch.onSingleTouch TouchMove
+                Touch.preventAndStop
+                (.touch >> touchToPoint >> PointerMovedTo)
+            , SingleTouch.onSingleTouch TouchEnd
+                Touch.preventAndStop
+                (always StopRotating)
+            , SingleTouch.onSingleTouch TouchCancel
+                Touch.preventAndStop
+                (always StopRotating)
             ]
             [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ]
                 vertexShader
@@ -241,11 +266,11 @@ view model =
             ]
 
 
-rotate : Frame3d -> Int -> Int -> Frame3d
+rotate : Frame3d -> Float -> Float -> Frame3d
 rotate currentFrame dx dy =
     let
         dragVector =
-            Vector2d ( toFloat dx, toFloat dy )
+            Vector2d ( dx, dy )
     in
         case Vector2d.direction dragVector of
             Just direction2d ->
@@ -273,46 +298,44 @@ rotate currentFrame dx dy =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        StartRotating startPosition ->
-            ( { model | rotation = Rotating startPosition }, Cmd.none )
+        StartRotatingAt startPoint ->
+            ( { model | lastRotationPoint = Just startPoint }, Cmd.none )
 
         StopRotating ->
-            ( { model | rotation = NotRotating }, Cmd.none )
+            ( { model | lastRotationPoint = Nothing }, Cmd.none )
 
-        MouseMoved newPosition ->
-            case model.rotation of
-                Rotating currentPosition ->
+        PointerMovedTo newPoint ->
+            case model.lastRotationPoint of
+                Just lastPoint ->
                     let
-                        dx =
-                            newPosition.x - currentPosition.x
-
-                        dy =
-                            -(newPosition.y - currentPosition.y)
+                        ( dx, dy ) =
+                            Vector2d.components
+                                (Point2d.vectorFrom lastPoint newPoint)
 
                         rotatedFrame =
-                            rotate model.boxFrame dx dy
+                            rotate model.boxFrame dx -dy
 
                         updatedModel =
                             { boxFrame = rotatedFrame
-                            , rotation = Rotating newPosition
+                            , lastRotationPoint = Just newPoint
                             }
                     in
                         ( updatedModel, Cmd.none )
 
-                NotRotating ->
+                Nothing ->
                     ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.rotation of
-        Rotating _ ->
+    case model.lastRotationPoint of
+        Just _ ->
             Sub.batch
-                [ Mouse.moves MouseMoved
+                [ Mouse.moves (mousePositionToPoint >> PointerMovedTo)
                 , Mouse.ups (always StopRotating)
                 ]
 
-        NotRotating ->
+        Nothing ->
             Sub.none
 
 
