@@ -11,7 +11,6 @@ import OpenSolid.Point3d as Point3d
 import OpenSolid.Vector3d as Vector3d
 import OpenSolid.Triangle3d as Triangle3d
 import OpenSolid.SketchPlane3d as SketchPlane3d
-import OpenSolid.WebGL.Triangle3d as Triangle3d
 import OpenSolid.WebGL.Frame3d as Frame3d
 import OpenSolid.WebGL.Vector3d as Vector3d
 import OpenSolid.WebGL.Direction3d as Direction3d
@@ -108,7 +107,7 @@ cubeMesh =
             , Triangle3d ( p0, p3, p2 )
             ]
     in
-        Triangle3d.meshWith positionsAndNormals faces
+        WebGL.triangles (List.map positionsAndNormals faces)
 
 
 eyeFrame : Frame3d
