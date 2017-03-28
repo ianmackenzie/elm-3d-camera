@@ -82,32 +82,16 @@ positionsAndNormals triangle =
 cubeMesh : Mesh Attributes
 cubeMesh =
     let
-        halfWidth =
-            5
-
-        p0 =
-            Point3d ( -halfWidth, -halfWidth, -halfWidth )
-
-        p1 =
-            Point3d ( halfWidth, -halfWidth, -halfWidth )
-
-        p2 =
-            Point3d ( halfWidth, halfWidth, -halfWidth )
-
-        p3 =
-            Point3d ( -halfWidth, halfWidth, -halfWidth )
-
-        p4 =
-            Point3d ( -halfWidth, -halfWidth, halfWidth )
-
-        p5 =
-            Point3d ( halfWidth, -halfWidth, halfWidth )
-
-        p6 =
-            Point3d ( halfWidth, halfWidth, halfWidth )
-
-        p7 =
-            Point3d ( -halfWidth, halfWidth, halfWidth )
+        ( p0, p1, p2, p3, p4, p5, p6, p7 ) =
+            ( Point3d ( -5, -5, -5 )
+            , Point3d ( 5, -5, -5 )
+            , Point3d ( 5, 5, -5 )
+            , Point3d ( -5, 5, -5 )
+            , Point3d ( -5, -5, 5 )
+            , Point3d ( 5, -5, 5 )
+            , Point3d ( 5, 5, 5 )
+            , Point3d ( -5, 5, 5 )
+            )
 
         faces =
             [ Triangle3d ( p0, p1, p5 )
