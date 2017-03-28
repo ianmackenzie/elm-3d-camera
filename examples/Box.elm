@@ -42,7 +42,7 @@ type Msg
 
 type alias Model =
     { cubeFrame : Frame3d
-    , lastRotationPoint : Maybe Point2d
+    , dragPoint : Maybe Point2d
     , windowSize : Maybe Window.Size
     }
 
@@ -138,7 +138,7 @@ init =
 
         model =
             { cubeFrame = initialFrame
-            , lastRotationPoint = Nothing
+            , dragPoint = Nothing
             , windowSize = Nothing
             }
     in
@@ -301,13 +301,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
         StartRotatingAt startPoint ->
-            ( { model | lastRotationPoint = Just startPoint }, Cmd.none )
+            ( { model | dragPoint = Just startPoint }, Cmd.none )
 
         StopRotating ->
-            ( { model | lastRotationPoint = Nothing }, Cmd.none )
+            ( { model | dragPoint = Nothing }, Cmd.none )
 
         PointerMovedTo newPoint ->
-            case model.lastRotationPoint of
+            case model.dragPoint of
                 Just lastPoint ->
                     let
                         ( dx, dy ) =
@@ -320,7 +320,7 @@ update message model =
                         updatedModel =
                             { model
                                 | cubeFrame = rotatedFrame
-                                , lastRotationPoint = Just newPoint
+                                , dragPoint = Just newPoint
                             }
                     in
                         ( updatedModel, Cmd.none )
@@ -336,7 +336,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         dragSubscriptions =
-            case model.lastRotationPoint of
+            case model.dragPoint of
                 Just _ ->
                     Sub.batch
                         [ Mouse.moves (mousePositionToPoint >> PointerMovedTo)
