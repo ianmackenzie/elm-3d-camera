@@ -25,19 +25,22 @@ import WebGL exposing (Mesh)
 import WebGL.Settings
 import Mouse
 import Task
-import Color
+import Color exposing (Color)
 import Window
-import Html exposing (Html)
+import Html exposing (Html, Attribute)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Json.Decode as Decode exposing (Decoder)
+
+
+-- Types
 
 
 type Msg
     = StartRotatingAt Point2d
     | PointerMovedTo Point2d
     | StopRotating
-    | WindowResized Window.Size
+    | SetWindowSize Window.Size
 
 
 type alias Model =
@@ -66,6 +69,43 @@ type alias Varyings =
     { position : Vec3
     , normal : Vec3
     }
+
+
+
+-- Constants
+
+
+initialCubeFrame : Frame3d
+initialCubeFrame =
+    Frame3d.xyz
+        |> Frame3d.rotateAround Axis3d.z (degrees -30)
+        |> Frame3d.rotateAround Axis3d.y (degrees 20)
+
+
+lightDirection : Direction3d
+lightDirection =
+    Vector3d ( -1, -1, -2 )
+        |> Vector3d.direction
+        |> Maybe.withDefault (Direction3d.flip Direction3d.z)
+
+
+faceColor : Color
+faceColor =
+    Color.rgb 51 77 230
+
+
+eyeFrame : Frame3d
+eyeFrame =
+    Frame3d
+        { originPoint = Point3d ( 50, 0, 0 )
+        , xDirection = Direction3d.y
+        , yDirection = Direction3d.z
+        , zDirection = Direction3d.x
+        }
+
+
+
+-- Rendering
 
 
 positionsAndNormals : Triangle3d -> ( Attributes, Attributes, Attributes )
@@ -116,33 +156,6 @@ cubeMesh =
             ]
     in
         WebGL.triangles (List.map positionsAndNormals faces)
-
-
-eyeFrame : Frame3d
-eyeFrame =
-    Frame3d
-        { originPoint = Point3d ( 50, 0, 0 )
-        , xDirection = Direction3d.y
-        , yDirection = Direction3d.z
-        , zDirection = Direction3d.x
-        }
-
-
-init : ( Model, Cmd Msg )
-init =
-    let
-        initialFrame =
-            Frame3d.xyz
-                |> Frame3d.rotateAround Axis3d.z (degrees -30)
-                |> Frame3d.rotateAround Axis3d.y (degrees 20)
-
-        model =
-            { cubeFrame = initialFrame
-            , dragPoint = Nothing
-            , windowSize = Nothing
-            }
-    in
-        ( model, Task.perform WindowResized Window.size )
 
 
 vertexShader : WebGL.Shader Attributes Uniforms Varyings
@@ -200,26 +213,66 @@ projectionMatrix { width, height } =
         Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
 
 
-lightDirection : Direction3d
-lightDirection =
-    Vector3d ( -1, -1, -2 )
-        |> Vector3d.direction
-        |> Maybe.withDefault (Direction3d.flip Direction3d.z)
+cubeEntity : Frame3d -> Window.Size -> WebGL.Entity
+cubeEntity cubeFrame windowSize =
+    let
+        uniforms =
+            { projectionMatrix = projectionMatrix windowSize
+            , modelMatrix = Frame3d.modelMatrix cubeFrame
+            , viewMatrix = Frame3d.viewMatrix eyeFrame
+            , lightDirection = Direction3d.toVec3 lightDirection
+            , faceColor = Color.toVec4 faceColor
+            }
+
+        settings =
+            [ WebGL.Settings.cullFace WebGL.Settings.back ]
+    in
+        WebGL.entityWith settings vertexShader fragmentShader cubeMesh uniforms
+
+
+
+-- Interactivity
 
 
 mousePositionToPoint : Mouse.Position -> Point2d
-mousePositionToPoint { x, y } =
-    Point2d ( toFloat x, toFloat y )
-
-
-mousePositionDecoder : Decoder Point2d
-mousePositionDecoder =
-    Mouse.position |> Decode.map mousePositionToPoint
+mousePositionToPoint mousePosition =
+    Point2d ( toFloat mousePosition.x, toFloat mousePosition.y )
 
 
 touchToPoint : Touch -> Point2d
-touchToPoint { clientX, clientY } =
-    Point2d ( clientX, clientY )
+touchToPoint touch =
+    Point2d ( touch.clientX, touch.clientY )
+
+
+init : ( Model, Cmd Msg )
+init =
+    let
+        model =
+            { cubeFrame = initialCubeFrame
+            , dragPoint = Nothing
+            , windowSize = Nothing
+            }
+    in
+        ( model, Task.perform SetWindowSize Window.size )
+
+
+dragAttributes : List (Attribute Msg)
+dragAttributes =
+    let
+        onMouseDown pointToMsg =
+            Events.on "mousedown" Mouse.position
+                |> Attributes.map (mousePositionToPoint >> pointToMsg)
+
+        onTouch touchEvent pointToMsg =
+            SingleTouch.onSingleTouch touchEvent Touch.preventAndStop .touch
+                |> Attributes.map (touchToPoint >> pointToMsg)
+    in
+        [ onMouseDown StartRotatingAt
+        , onTouch TouchStart StartRotatingAt
+        , onTouch TouchMove PointerMovedTo
+        , onTouch TouchEnd (always StopRotating)
+        , onTouch TouchCancel (always StopRotating)
+        ]
 
 
 view : Model -> Html Msg
@@ -227,49 +280,29 @@ view model =
     case model.windowSize of
         Just windowSize ->
             let
-                uniforms =
-                    { projectionMatrix = projectionMatrix windowSize
-                    , modelMatrix = Frame3d.modelMatrix model.cubeFrame
-                    , viewMatrix = Frame3d.viewMatrix eyeFrame
-                    , lightDirection = Direction3d.toVec3 lightDirection
-                    , faceColor = Color.toVec4 (Color.rgb 51 77 230)
-                    }
+                widthAttribute =
+                    Attributes.width windowSize.width
 
-                rotationAttributes =
-                    [ Events.on "mousedown"
-                        (mousePositionDecoder |> Decode.map StartRotatingAt)
-                    , SingleTouch.onSingleTouch TouchStart
-                        Touch.preventAndStop
-                        (.touch >> touchToPoint >> StartRotatingAt)
-                    , SingleTouch.onSingleTouch TouchMove
-                        Touch.preventAndStop
-                        (.touch >> touchToPoint >> PointerMovedTo)
-                    , SingleTouch.onSingleTouch TouchEnd
-                        Touch.preventAndStop
-                        (always StopRotating)
-                    , SingleTouch.onSingleTouch TouchCancel
-                        Touch.preventAndStop
-                        (always StopRotating)
-                    ]
+                heightAttribute =
+                    Attributes.height windowSize.height
+
+                options =
+                    [ WebGL.clearColor 0 0 0 1 ]
+
+                attributes =
+                    widthAttribute :: heightAttribute :: dragAttributes
+
+                entities =
+                    [ cubeEntity model.cubeFrame windowSize ]
             in
-                WebGL.toHtmlWith [ WebGL.clearColor 0 0 0 1 ]
-                    (Attributes.width windowSize.width
-                        :: Attributes.height windowSize.height
-                        :: rotationAttributes
-                    )
-                    [ WebGL.entityWith [ WebGL.Settings.cullFace WebGL.Settings.back ]
-                        vertexShader
-                        fragmentShader
-                        cubeMesh
-                        uniforms
-                    ]
+                WebGL.toHtmlWith options attributes entities
 
         Nothing ->
             Html.text ""
 
 
 rotate : Frame3d -> Float -> Float -> Frame3d
-rotate currentFrame dx dy =
+rotate frame dx dy =
     let
         dragVector =
             Vector2d ( dx, dy )
@@ -290,11 +323,10 @@ rotate currentFrame dx dy =
                     rotationAngle =
                         degrees 1 * Vector2d.length dragVector
                 in
-                    currentFrame
-                        |> Frame3d.rotateAround rotationAxis rotationAngle
+                    frame |> Frame3d.rotateAround rotationAxis rotationAngle
 
             Nothing ->
-                currentFrame
+                frame
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -328,14 +360,14 @@ update message model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        WindowResized windowSize ->
+        SetWindowSize windowSize ->
             ( { model | windowSize = Just windowSize }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
-        dragSubscriptions =
+        dragEvents =
             case model.dragPoint of
                 Just _ ->
                     Sub.batch
@@ -346,7 +378,7 @@ subscriptions model =
                 Nothing ->
                     Sub.none
     in
-        Sub.batch [ dragSubscriptions, Window.resizes WindowResized ]
+        Sub.batch [ dragEvents, Window.resizes SetWindowSize ]
 
 
 main : Program Never Model Msg
