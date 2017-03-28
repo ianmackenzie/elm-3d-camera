@@ -15,13 +15,16 @@ import OpenSolid.WebGL.Frame3d as Frame3d
 import OpenSolid.WebGL.Vector3d as Vector3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
+import OpenSolid.WebGL.Color as Color
 import Touch exposing (Touch, TouchEvent(..))
 import SingleTouch
 import Math.Vector3 exposing (Vec3)
+import Math.Vector4 exposing (Vec4)
 import Math.Matrix4 exposing (Mat4)
 import WebGL exposing (Mesh)
 import WebGL.Settings
 import Mouse
+import Color
 import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
@@ -51,6 +54,7 @@ type alias Uniforms =
     , viewMatrix : Mat4
     , projectionMatrix : Mat4
     , lightDirection : Vec3
+    , faceColor : Vec4
     }
 
 
@@ -170,13 +174,15 @@ fragmentShader =
     [glsl|
         precision mediump float;
         uniform vec3 lightDirection;
+        uniform vec4 faceColor;
         varying vec3 position;
         varying vec3 normal;
 
         void main () {
-            float intensity = 0.4 + 0.6 * clamp(dot(-normal, lightDirection), 0.0, 1.0);
-            vec3 color = vec3(0.2, 0.3, 0.9) * intensity;
-            gl_FragColor = vec4(color, 1.0);
+            float dotProduct = dot(-normal, lightDirection);
+            float intensity = 0.4 + 0.6 * clamp(dotProduct, 0.0, 1.0);
+            vec3 rgb = faceColor.rgb * intensity;
+            gl_FragColor = vec4(rgb, faceColor.a);
         }
     |]
 
@@ -220,6 +226,7 @@ view model =
             , modelMatrix = Frame3d.modelMatrix model.boxFrame
             , viewMatrix = Frame3d.viewMatrix eyeFrame
             , lightDirection = Direction3d.toVec3 lightDirection
+            , faceColor = Color.toVec4 (Color.rgb 51 77 230)
             }
     in
         WebGL.toHtmlWith [ WebGL.clearColor 0 0 0 1 ]
