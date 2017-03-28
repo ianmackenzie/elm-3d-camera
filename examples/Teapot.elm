@@ -27,6 +27,7 @@ import Mouse
 import Task
 import Color exposing (Color)
 import Window
+import Http
 import Html exposing (Html, Attribute)
 import Html.Attributes as Attributes
 import Html.Events as Events
@@ -41,10 +42,12 @@ type Msg
     | PointerMovedTo Point2d
     | StopRotating
     | SetWindowSize Window.Size
+    | LoadModel (Result Http.Error (Mesh Attributes))
 
 
 type alias Model =
-    { cubeFrame : Frame3d
+    { placementFrame : Frame3d
+    , mesh : Maybe (Mesh Attributes)
     , dragPoint : Maybe Point2d
     , windowSize : Maybe Window.Size
     }
@@ -75,8 +78,8 @@ type alias Varyings =
 -- Constants
 
 
-initialCubeFrame : Frame3d
-initialCubeFrame =
+initialFrame : Frame3d
+initialFrame =
     Frame3d.xyz
         |> Frame3d.rotateAround Axis3d.z (degrees -30)
         |> Frame3d.rotateAround Axis3d.y (degrees 20)
@@ -97,7 +100,7 @@ faceColor =
 eyeFrame : Frame3d
 eyeFrame =
     Frame3d
-        { originPoint = Point3d ( 50, 0, 0 )
+        { originPoint = Point3d ( 15, 0, 0 )
         , xDirection = Direction3d.y
         , yDirection = Direction3d.z
         , zDirection = Direction3d.x
@@ -105,57 +108,81 @@ eyeFrame =
 
 
 
--- Rendering
+-- Model loading
 
 
-positionsAndNormals : Triangle3d -> ( Attributes, Attributes, Attributes )
-positionsAndNormals triangle =
-    let
-        ( p1, p2, p3 ) =
-            Triangle3d.vertices triangle
+accumulateVertices : List Float -> List Point3d -> List Point3d
+accumulateVertices coordinates accumulated =
+    case coordinates of
+        x :: y :: z :: rest ->
+            accumulateVertices rest
+                (Point3d ( x, y, z ) :: accumulated)
 
-        normalVector =
-            Triangle3d.normalDirection triangle
-                |> Maybe.map Direction3d.toVector
-                |> Maybe.withDefault Vector3d.zero
-                |> Vector3d.toVec3
-    in
-        ( { vertexPosition = Point3d.toVec3 p1, vertexNormal = normalVector }
-        , { vertexPosition = Point3d.toVec3 p2, vertexNormal = normalVector }
-        , { vertexPosition = Point3d.toVec3 p3, vertexNormal = normalVector }
+        _ ->
+            List.reverse accumulated
+
+
+accumulateNormals : List Float -> List Direction3d -> List Direction3d
+accumulateNormals components accumulated =
+    case components of
+        x :: y :: z :: rest ->
+            accumulateNormals rest
+                (Direction3d ( x, y, z ) :: accumulated)
+
+        _ ->
+            List.reverse accumulated
+
+
+accumulateFaces : List Int -> List ( Int, Int, Int ) -> List ( Int, Int, Int )
+accumulateFaces indices accumulated =
+    case indices of
+        a :: b :: c :: d :: e :: f :: g :: h :: rest ->
+            accumulateFaces rest (( b, c, d ) :: accumulated)
+
+        _ ->
+            List.reverse accumulated
+
+
+meshDecoder : Decoder (Mesh Attributes)
+meshDecoder =
+    Decode.map3
+        (\vertexData normalData faceData ->
+            let
+                frame =
+                    Frame3d.xyz
+                        |> Frame3d.rotateAround Axis3d.x (degrees 90)
+                        |> Frame3d.translateBy (Vector3d ( 0, 0, -1 ))
+
+                vertices =
+                    accumulateVertices vertexData []
+                        |> List.map (Point3d.placeIn frame)
+
+                normals =
+                    accumulateNormals normalData []
+                        |> List.map (Direction3d.placeIn frame)
+
+                faces =
+                    accumulateFaces faceData []
+
+                attributes =
+                    List.map2
+                        (\vertex normal ->
+                            { vertexPosition = Point3d.toVec3 vertex
+                            , vertexNormal = Direction3d.toVec3 normal
+                            }
+                        )
+                        vertices
+                        normals
+            in
+                WebGL.indexedTriangles attributes faces
         )
+        (Decode.field "vertices" (Decode.list Decode.float))
+        (Decode.field "normals" (Decode.list Decode.float))
+        (Decode.field "faces" (Decode.list Decode.int))
 
 
-cubeMesh : Mesh Attributes
-cubeMesh =
-    let
-        ( p0, p1, p2, p3, p4, p5, p6, p7 ) =
-            ( Point3d ( -5, -5, -5 )
-            , Point3d ( 5, -5, -5 )
-            , Point3d ( 5, 5, -5 )
-            , Point3d ( -5, 5, -5 )
-            , Point3d ( -5, -5, 5 )
-            , Point3d ( 5, -5, 5 )
-            , Point3d ( 5, 5, 5 )
-            , Point3d ( -5, 5, 5 )
-            )
 
-        faces =
-            [ Triangle3d ( p0, p1, p5 )
-            , Triangle3d ( p0, p5, p4 )
-            , Triangle3d ( p1, p2, p6 )
-            , Triangle3d ( p1, p6, p5 )
-            , Triangle3d ( p4, p5, p6 )
-            , Triangle3d ( p4, p6, p7 )
-            , Triangle3d ( p3, p6, p2 )
-            , Triangle3d ( p3, p7, p6 )
-            , Triangle3d ( p3, p4, p7 )
-            , Triangle3d ( p3, p0, p4 )
-            , Triangle3d ( p0, p2, p1 )
-            , Triangle3d ( p0, p3, p2 )
-            ]
-    in
-        WebGL.triangles (List.map positionsAndNormals faces)
+-- Rendering
 
 
 vertexShader : WebGL.Shader Attributes Uniforms Varyings
@@ -213,21 +240,18 @@ projectionMatrix { width, height } =
         Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
 
 
-cubeEntity : Frame3d -> Window.Size -> WebGL.Entity
-cubeEntity cubeFrame windowSize =
+entity : Mesh Attributes -> Frame3d -> Window.Size -> WebGL.Entity
+entity mesh placementFrame windowSize =
     let
         uniforms =
             { projectionMatrix = projectionMatrix windowSize
-            , modelMatrix = Frame3d.modelMatrix cubeFrame
+            , modelMatrix = Frame3d.modelMatrix placementFrame
             , viewMatrix = Frame3d.viewMatrix eyeFrame
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = Color.toVec4 faceColor
             }
-
-        settings =
-            [ WebGL.Settings.cullFace WebGL.Settings.back ]
     in
-        WebGL.entityWith settings vertexShader fragmentShader cubeMesh uniforms
+        WebGL.entity vertexShader fragmentShader mesh uniforms
 
 
 
@@ -248,12 +272,19 @@ init : ( Model, Cmd Msg )
 init =
     let
         model =
-            { cubeFrame = initialCubeFrame
+            { placementFrame = initialFrame
+            , mesh = Nothing
             , dragPoint = Nothing
             , windowSize = Nothing
             }
+
+        cmds =
+            Cmd.batch
+                [ Task.perform SetWindowSize Window.size
+                , Http.send LoadModel (Http.get "teapot.json" meshDecoder)
+                ]
     in
-        ( model, Task.perform SetWindowSize Window.size )
+        ( model, cmds )
 
 
 dragAttributes : List (Attribute Msg)
@@ -277,8 +308,8 @@ dragAttributes =
 
 view : Model -> Html Msg
 view model =
-    case model.windowSize of
-        Just windowSize ->
+    case ( model.windowSize, model.mesh ) of
+        ( Just windowSize, Just mesh ) ->
             let
                 widthAttribute =
                     Attributes.width windowSize.width
@@ -287,18 +318,21 @@ view model =
                     Attributes.height windowSize.height
 
                 options =
-                    [ WebGL.clearColor 0 0 0 1 ]
+                    [ WebGL.clearColor 0 0 0 1
+                    , WebGL.depth 1
+                    , WebGL.antialias
+                    ]
 
                 attributes =
                     widthAttribute :: heightAttribute :: dragAttributes
 
                 entities =
-                    [ cubeEntity model.cubeFrame windowSize ]
+                    [ entity mesh model.placementFrame windowSize ]
             in
                 WebGL.toHtmlWith options attributes entities
 
-        Nothing ->
-            Html.text ""
+        _ ->
+            Html.text "Loading model..."
 
 
 rotate : Frame3d -> Float -> Float -> Frame3d
@@ -347,11 +381,11 @@ update message model =
                                 (Point2d.vectorFrom lastPoint newPoint)
 
                         rotatedFrame =
-                            rotate model.cubeFrame dx -dy
+                            rotate model.placementFrame dx -dy
 
                         updatedModel =
                             { model
-                                | cubeFrame = rotatedFrame
+                                | placementFrame = rotatedFrame
                                 , dragPoint = Just newPoint
                             }
                     in
@@ -362,6 +396,14 @@ update message model =
 
         SetWindowSize windowSize ->
             ( { model | windowSize = Just windowSize }, Cmd.none )
+
+        LoadModel result ->
+            case result of
+                Ok mesh ->
+                    ( { model | mesh = Just mesh }, Cmd.none )
+
+                Err _ ->
+                    ( { model | mesh = Nothing }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
