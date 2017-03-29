@@ -47,7 +47,7 @@ type Msg
 
 type alias Model =
     { placementFrame : Frame3d
-    , mesh : Maybe (Mesh Attributes)
+    , mesh : () -> Maybe (Mesh Attributes)
     , dragPoint : Maybe Point2d
     , windowSize : Maybe Window.Size
     }
@@ -273,7 +273,7 @@ init =
     let
         model =
             { placementFrame = initialFrame
-            , mesh = Nothing
+            , mesh = always Nothing
             , dragPoint = Nothing
             , windowSize = Nothing
             }
@@ -308,7 +308,7 @@ dragAttributes =
 
 view : Model -> Html Msg
 view model =
-    case ( model.windowSize, model.mesh ) of
+    case ( model.windowSize, model.mesh () ) of
         ( Just windowSize, Just mesh ) ->
             let
                 widthAttribute =
@@ -400,10 +400,10 @@ update message model =
         LoadModel result ->
             case result of
                 Ok mesh ->
-                    ( { model | mesh = Just mesh }, Cmd.none )
+                    ( { model | mesh = always (Just mesh) }, Cmd.none )
 
                 Err _ ->
-                    ( { model | mesh = Nothing }, Cmd.none )
+                    ( { model | mesh = always Nothing }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
