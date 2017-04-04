@@ -6,7 +6,16 @@
     "source-directories": [
         "src"
     ],
-    "exposed-modules": [],
+    "exposed-modules": [
+        "OpenSolid.WebGL.Color",
+        "OpenSolid.WebGL.Vector2d",
+        "OpenSolid.WebGL.Vector3d",
+        "OpenSolid.WebGL.Direction2d",
+        "OpenSolid.WebGL.Direction3d",
+        "OpenSolid.WebGL.Point2d",
+        "OpenSolid.WebGL.Point3d",
+        "OpenSolid.WebGL.Frame3d"
+    ],
     "dependencies": {
         "elm-community/linear-algebra": "3.0.0 <= v < 4.0.0",
         "elm-community/webgl": "2.0.3 <= v < 3.0.0",
