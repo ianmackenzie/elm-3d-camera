@@ -1,4 +1,4 @@
-## `opensolid/webgl`
+## opensolid/webgl
 
 This is a small package containing conversion functions from OpenSolid point,
 direction and vector types (plus Elm's built-in `Color` type) to the `Vec2`,
