@@ -3,8 +3,8 @@
 This is a small package containing conversion functions from OpenSolid point,
 direction and vector types (plus Elm's built-in `Color` type) to the `Vec2`,
 `Vec3` and `Vec4` types used by the [`elm-community/webgl`](http://package.elm-lang.org/packages/elm-community/webgl/latest)
-package. Functions are also provided for constructing WebGL model and view
-matrices from OpenSolid `Frame3d` values.
+package. Functions are also provided for constructing WebGL `Mat4` model and
+view matrices from OpenSolid `Frame3d` values.
 
 All modules are intended to be imported using `as`, for example
 
