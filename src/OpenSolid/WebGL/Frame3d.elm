@@ -2,16 +2,18 @@ module OpenSolid.WebGL.Frame3d
     exposing
         ( modelMatrix
         , viewMatrix
+        , modelViewMatrix
         )
 
 {-| Functions for constructing WebGL model and view matrices from `Frame3d`
 values.
 
-@docs modelMatrix, viewMatrix
+@docs modelMatrix, viewMatrix, modelViewMatrix
 
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.Frame3d as Frame3d
 import OpenSolid.WebGL.Point3d as Point3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 import Math.Matrix4 exposing (Mat4)
@@ -58,3 +60,22 @@ the `linear-algebra` library provides [several](http://package.elm-lang.org/pack
 viewMatrix : Frame3d -> Mat4
 viewMatrix =
     modelMatrix >> Math.Matrix4.inverseOrthonormal
+
+
+{-| Construct a WebGL model-view matrix from one `Frame3d` that defines the
+position and orientation of a camera and another that defines the position and
+orientation of an object.
+
+    Frame3d.modelViewMatrix eyeFrame modelFrame
+
+is equivalent to
+
+    Matrix4.mul (Frame3d.viewMatrix eyeFrame) (Frame3d.modelMatrix modelFrame)
+
+but more accurate (since internally `Mat4` values use single-precision floats
+instead of double-precision).
+
+-}
+modelViewMatrix : Frame3d -> Frame3d -> Mat4
+modelViewMatrix eyeFrame modelFrame =
+    modelMatrix (Frame3d.relativeTo eyeFrame modelFrame)
