@@ -8,6 +8,7 @@ module OpenSolid.WebGL.Frame3d
 values.
 
 @docs modelMatrix, viewMatrix
+
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -52,6 +53,7 @@ is up.
 
 Note that you will typically also need a [projection matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-projection-matrix);
 the `linear-algebra` library provides [several](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest/Math-Matrix4#projections).
+
 -}
 viewMatrix : Frame3d -> Mat4
 viewMatrix =
