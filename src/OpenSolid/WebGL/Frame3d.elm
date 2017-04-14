@@ -3,17 +3,21 @@ module OpenSolid.WebGL.Frame3d
         ( modelMatrix
         , viewMatrix
         , modelViewMatrix
+        , lookAt
         )
 
 {-| Functions for constructing WebGL model and view matrices from `Frame3d`
 values.
 
-@docs modelMatrix, viewMatrix, modelViewMatrix
+@docs modelMatrix, viewMatrix, modelViewMatrix, lookAt
 
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Frame3d as Frame3d
+import OpenSolid.Point3d as Point3d
+import OpenSolid.Vector3d as Vector3d
+import OpenSolid.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 import Math.Matrix4 exposing (Mat4)
@@ -79,3 +83,42 @@ instead of double-precision).
 modelViewMatrix : Frame3d -> Frame3d -> Mat4
 modelViewMatrix eyeFrame modelFrame =
     modelMatrix (Frame3d.relativeTo eyeFrame modelFrame)
+
+
+lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Frame3d
+lookAt { focalPoint, eyePoint, upDirection } =
+    let
+        zVector =
+            Point3d.vectorFrom focalPoint eyePoint
+
+        yVector =
+            Direction3d.toVector upDirection
+
+        xVector =
+            Vector3d.crossProduct yVector zVector
+    in
+        case Direction3d.orthonormalize ( zVector, yVector, xVector ) of
+            Just ( zDirection, yDirection, xDirection ) ->
+                Frame3d
+                    { originPoint = eyePoint
+                    , xDirection = xDirection
+                    , yDirection = yDirection
+                    , zDirection = zDirection
+                    }
+
+            Nothing ->
+                case Vector3d.direction zVector of
+                    Just zDirection ->
+                        let
+                            ( xDirection, yDirection ) =
+                                Direction3d.perpendicularBasis zDirection
+                        in
+                            Frame3d
+                                { originPoint = eyePoint
+                                , xDirection = xDirection
+                                , yDirection = yDirection
+                                , zDirection = zDirection
+                                }
+
+                    Nothing ->
+                        Frame3d.at eyePoint
