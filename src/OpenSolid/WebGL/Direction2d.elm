@@ -1,4 +1,7 @@
-module OpenSolid.WebGL.Direction2d exposing (toVec2)
+module OpenSolid.WebGL.Direction2d
+    exposing
+        ( toVec2
+        )
 
 {-| @docs toVec2
 -}

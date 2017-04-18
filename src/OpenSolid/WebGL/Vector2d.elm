@@ -1,4 +1,7 @@
-module OpenSolid.WebGL.Vector2d exposing (toVec2)
+module OpenSolid.WebGL.Vector2d
+    exposing
+        ( toVec2
+        )
 
 {-| @docs toVec2
 -}
