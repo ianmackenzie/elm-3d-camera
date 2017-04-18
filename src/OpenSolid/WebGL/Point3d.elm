@@ -2,6 +2,7 @@ module OpenSolid.WebGL.Point3d
     exposing
         ( toVec3
         , toVec4
+        , toVertexPosition
         )
 
 {-| Utility functions for converting `Point3d` values to WebGL types.
@@ -10,6 +11,7 @@ module OpenSolid.WebGL.Point3d
 
 -}
 
+import OpenSolid.WebGL.Types exposing (..)
 import OpenSolid.Geometry.Types exposing (..)
 import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
@@ -37,3 +39,8 @@ when performing matrix transformations.
 toVec4 : Point3d -> Vec4
 toVec4 (Point3d ( x, y, z )) =
     Math.Vector4.vec4 x y z 1
+
+
+toVertexPosition : Point3d -> VertexPosition
+toVertexPosition point =
+    { vertexPosition = toVec3 point }
