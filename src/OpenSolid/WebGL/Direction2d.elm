@@ -1,7 +1,6 @@
 module OpenSolid.WebGL.Direction2d exposing (toVec2)
 
-{-|
-@docs toVec2
+{-| @docs toVec2
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -12,6 +11,7 @@ import Math.Vector2 exposing (Vec2)
 
     Direction2d.toVec2 Direction2d.x
     --> vec2 1 0
+
 -}
 toVec2 : Direction2d -> Vec2
 toVec2 (Direction2d ( x, y )) =

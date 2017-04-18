@@ -7,6 +7,7 @@ module OpenSolid.WebGL.Point3d
 {-| Utility functions for converting `Point3d` values to WebGL types.
 
 @docs toVec3, toVec4
+
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -18,6 +19,7 @@ import Math.Vector4 exposing (Vec4)
 
     Point3d.toVec3 (Point3d ( 2, 1, 3 ))
     --> vec3 2 1 3
+
 -}
 toVec3 : Point3d -> Vec3
 toVec3 (Point3d ( x, y, z )) =
@@ -30,6 +32,7 @@ when performing matrix transformations.
 
     Point3d.toVec4 (Point3d ( 2, 1, 3 ))
     --> vec4 2 1 3 1
+
 -}
 toVec4 : Point3d -> Vec4
 toVec4 (Point3d ( x, y, z )) =

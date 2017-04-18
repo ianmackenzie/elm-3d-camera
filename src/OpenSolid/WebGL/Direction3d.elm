@@ -7,6 +7,7 @@ module OpenSolid.WebGL.Direction3d
 {-| Utility functions for converting `Direction3d` values to WebGL types.
 
 @docs toVec3, toVec4
+
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -18,6 +19,7 @@ import Math.Vector4 exposing (Vec4)
 
     Direction3d.toVec3 Direction3d.y
     --> vec3 0 1 0
+
 -}
 toVec3 : Direction3d -> Vec3
 toVec3 (Direction3d ( x, y, z )) =
@@ -30,6 +32,7 @@ when performing matrix transformations.
 
     Direction3d.toVec4 Direction3d.y
     --> vec4 0 1 0 0
+
 -}
 toVec4 : Direction3d -> Vec4
 toVec4 (Direction3d ( x, y, z )) =

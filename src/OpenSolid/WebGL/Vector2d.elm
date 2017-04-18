@@ -1,7 +1,6 @@
 module OpenSolid.WebGL.Vector2d exposing (toVec2)
 
-{-|
-@docs toVec2
+{-| @docs toVec2
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -12,6 +11,7 @@ import Math.Vector2 exposing (Vec2)
 
     Vector2d.toVec2 (Vector2d ( 2, 3 ))
     --> vec2 2 3
+
 -}
 toVec2 : Vector2d -> Vec2
 toVec2 (Vector2d ( x, y )) =

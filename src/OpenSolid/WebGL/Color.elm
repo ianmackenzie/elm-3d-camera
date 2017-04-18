@@ -7,10 +7,11 @@ module OpenSolid.WebGL.Color
 {-| Utility functions for converting `Color` values to WebGL types. Note that
 while `Color` values in Elm are constructed from `Int` RGB components in the
 range 0..255 and a `Float` alpha component in the range 0..1, the functions in
-this module convert  all components to floating-point values in the range 0..1
+this module convert all components to floating-point values in the range 0..1
 as expected by OpenGL.
 
 @docs toVec3, toVec4
+
 -}
 
 import Color exposing (Color)
@@ -30,6 +31,7 @@ scaled component =
 
     Color.toVec3 (Color.rgba 51 153 102 0.5)
     --> vec3 0.2 0.6 0.4
+
 -}
 toVec3 : Color -> Vec3
 toVec3 color =
@@ -47,6 +49,7 @@ toVec3 color =
 
     Color.toVec4 (Color.rgba 51 153 102 0.5)
     --> vec4 0.2 0.6 0.4 0.5
+
 -}
 toVec4 : Color -> Vec4
 toVec4 color =

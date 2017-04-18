@@ -7,6 +7,7 @@ module OpenSolid.WebGL.Vector3d
 {-| Utility functions for converting `Vector3d` values to WebGL types.
 
 @docs toVec3, toVec4
+
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
@@ -18,6 +19,7 @@ import Math.Vector4 exposing (Vec4)
 
     Vector3d.toVec3 (Vector3d ( 2, 1, 3 ))
     --> vec3 2 1 3
+
 -}
 toVec3 : Vector3d -> Vec3
 toVec3 (Vector3d ( x, y, z )) =
@@ -30,6 +32,7 @@ when performing matrix transformations.
 
     Vector3d.toVec4 (Vector3d ( 2, 1, 3 ))
     --> vec4 2 1 3 0
+
 -}
 toVec4 : Vector3d -> Vec4
 toVec4 (Vector3d ( x, y, z )) =
