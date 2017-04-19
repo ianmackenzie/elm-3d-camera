@@ -10,39 +10,51 @@ import Math.Matrix4 as Matrix4 exposing (Mat4)
 
 
 type Projection
-    = Projection Mat4
+    = Projection Float Float Mat4
 
 
-perspective : { verticalFov : Float, aspectRatio : Float, zNear : Float, zFar : Float } -> Projection
-perspective { verticalFov, aspectRatio, zNear, zFar } =
+perspective : { screenWidth : Float, screenHeight : Float, verticalFov : Float, zNear : Float, zFar : Float } -> Projection
+perspective { screenWidth, screenHeight, verticalFov, zNear, zFar } =
     let
+        aspectRatio =
+            screenWidth / screenHeight
+
         fovInDegrees =
             verticalFov / degrees 1
+
+        projectionMatrix =
+            Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar
     in
-        Projection (Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar)
+        Projection screenWidth screenHeight projectionMatrix
 
 
-orthographic : { height : Float, aspectRatio : Float, zNear : Float, zFar : Float } -> Projection
-orthographic { height, aspectRatio, zNear, zFar } =
+orthographic : { screenWidth : Float, screenHeight : Float, viewportHeight : Float, zNear : Float, zFar : Float } -> Projection
+orthographic { screenWidth, screenHeight, viewportHeight, zNear, zFar } =
     let
-        width =
-            aspectRatio * height
+        aspectRatio =
+            screenWidth / screenHeight
+
+        viewportWidth =
+            aspectRatio * viewportHeight
 
         left =
-            -width / 2
+            -viewportWidth / 2
 
         right =
-            width / 2
+            viewportWidth / 2
 
         bottom =
-            -height / 2
+            -viewportHeight / 2
 
         top =
-            height / 2
+            viewportHeight / 2
+
+        projectionMatrix =
+            Matrix4.makeOrtho left right bottom top zNear zFar
     in
-        Projection (Matrix4.makeOrtho left right bottom top zNear zFar)
+        Projection screenWidth screenHeight projectionMatrix
 
 
 matrix : Projection -> Mat4
-matrix (Projection matrix_) =
+matrix (Projection _ _ matrix_) =
     matrix_
