@@ -11,7 +11,6 @@ module OpenSolid.WebGL.Point3d
 
 -}
 
-import OpenSolid.WebGL.Types exposing (..)
 import OpenSolid.Geometry.Types exposing (..)
 import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
@@ -41,6 +40,6 @@ toVec4 (Point3d ( x, y, z )) =
     Math.Vector4.vec4 x y z 1
 
 
-toVertexPosition : Point3d -> VertexPosition
+toVertexPosition : Point3d -> { vertexPosition : Vec3 }
 toVertexPosition point =
     { vertexPosition = toVec3 point }

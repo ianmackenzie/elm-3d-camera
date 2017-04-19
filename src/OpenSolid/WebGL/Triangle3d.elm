@@ -4,15 +4,14 @@ module OpenSolid.WebGL.Triangle3d
         , vertexPositionsAndNormals
         )
 
-import OpenSolid.WebGL.Types exposing (..)
 import OpenSolid.WebGL.Point3d as Point3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Triangle3d as Triangle3d
-import Math.Vector3 as Vector3
+import Math.Vector3 as Vector3 exposing (Vec3)
 
 
-vertexPositions : Triangle3d -> ( VertexPosition, VertexPosition, VertexPosition )
+vertexPositions : Triangle3d -> ( { vertexPosition : Vec3 }, { vertexPosition : Vec3 }, { vertexPosition : Vec3 } )
 vertexPositions triangle =
     let
         ( p1, p2, p3 ) =
@@ -24,7 +23,7 @@ vertexPositions triangle =
         )
 
 
-vertexPositionsAndNormals : Triangle3d -> ( VertexPositionAnd VertexNormal, VertexPositionAnd VertexNormal, VertexPositionAnd VertexNormal )
+vertexPositionsAndNormals : Triangle3d -> ( { vertexPosition : Vec3, vertexNormal : Vec3 }, { vertexPosition : Vec3, vertexNormal : Vec3 }, { vertexPosition : Vec3, vertexNormal : Vec3 } )
 vertexPositionsAndNormals triangle =
     let
         normalVector =
