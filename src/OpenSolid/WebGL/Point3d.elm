@@ -3,6 +3,7 @@ module OpenSolid.WebGL.Point3d
         ( toVec3
         , toVec4
         , toVertexPosition
+        , toScreenSpace
         )
 
 {-| Utility functions for converting `Point3d` values to WebGL types.
@@ -12,8 +13,11 @@ module OpenSolid.WebGL.Point3d
 -}
 
 import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.Point3d as Point3d
+import OpenSolid.WebGL.Projection as Projection exposing (Projection)
 import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
+import Math.Matrix4 exposing (Mat4)
 
 
 {-| Convert a `Point3d` to a `Vec3`.
@@ -43,3 +47,30 @@ toVec4 (Point3d ( x, y, z )) =
 toVertexPosition : Point3d -> { vertexPosition : Vec3 }
 toVertexPosition point =
     { vertexPosition = toVec3 point }
+
+
+toScreenSpace : Projection -> Point3d -> Point2d
+toScreenSpace projection point =
+    let
+        projectionMatrix =
+            Projection.matrix projection
+
+        viewSpacePoint =
+            Point3d.relativeTo (Projection.eyeFrame projection) point
+
+        normalizedCoordinates =
+            Math.Matrix4.transform projectionMatrix (toVec3 viewSpacePoint)
+
+        halfWidth =
+            0.5 * Projection.screenWidth projection
+
+        halfHeight =
+            0.5 * Projection.screenHeight projection
+
+        x =
+            halfWidth + halfWidth * Math.Vector3.getX normalizedCoordinates
+
+        y =
+            halfHeight + halfHeight * Math.Vector3.getY normalizedCoordinates
+    in
+        Point2d ( x, y )
