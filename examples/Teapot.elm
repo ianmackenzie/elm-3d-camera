@@ -89,7 +89,7 @@ lightDirection : Direction3d
 lightDirection =
     Vector3d ( -1, -1, -2 )
         |> Vector3d.direction
-        |> Maybe.withDefault (Direction3d.flip Direction3d.z)
+        |> Maybe.withDefault Direction3d.negativeZ
 
 
 faceColor : Color
