@@ -1,29 +1,30 @@
-module OpenSolid.WebGL.Projection
+module OpenSolid.WebGL.Camera
     exposing
-        ( Projection
+        ( Camera
         , perspective
         , orthographic
-        , eyeFrame
+        , frame
         , screenWidth
         , screenHeight
-        , matrix
+        , projectionMatrix
         )
 
 import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.WebGL.Frame3d as Frame3d
 import Math.Matrix4 as Matrix4 exposing (Mat4)
 
 
-type Projection
-    = Projection
-        { eyeFrame : Frame3d
+type Camera
+    = Camera
+        { frame : Frame3d
         , screenWidth : Float
         , screenHeight : Float
-        , matrix : Mat4
+        , projectionMatrix : Mat4
         }
 
 
-perspective : { eyeFrame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFov : Float, zNear : Float, zFar : Float } -> Projection
-perspective { eyeFrame, screenWidth, screenHeight, verticalFov, zNear, zFar } =
+perspective : { frame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFov : Float, zNear : Float, zFar : Float } -> Camera
+perspective { frame, screenWidth, screenHeight, verticalFov, zNear, zFar } =
     let
         aspectRatio =
             screenWidth / screenHeight
@@ -34,16 +35,16 @@ perspective { eyeFrame, screenWidth, screenHeight, verticalFov, zNear, zFar } =
         projectionMatrix =
             Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar
     in
-        Projection
-            { eyeFrame = eyeFrame
+        Camera
+            { frame = frame
             , screenWidth = screenWidth
             , screenHeight = screenHeight
-            , matrix = projectionMatrix
+            , projectionMatrix = projectionMatrix
             }
 
 
-orthographic : { eyeFrame : Frame3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, zNear : Float, zFar : Float } -> Projection
-orthographic { eyeFrame, screenWidth, screenHeight, viewportHeight, zNear, zFar } =
+orthographic : { frame : Frame3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, zNear : Float, zFar : Float } -> Camera
+orthographic { frame, screenWidth, screenHeight, viewportHeight, zNear, zFar } =
     let
         aspectRatio =
             screenWidth / screenHeight
@@ -66,29 +67,29 @@ orthographic { eyeFrame, screenWidth, screenHeight, viewportHeight, zNear, zFar 
         projectionMatrix =
             Matrix4.makeOrtho left right bottom top zNear zFar
     in
-        Projection
-            { eyeFrame = eyeFrame
+        Camera
+            { frame = frame
             , screenWidth = screenWidth
             , screenHeight = screenHeight
-            , matrix = projectionMatrix
+            , projectionMatrix = projectionMatrix
             }
 
 
-eyeFrame : Projection -> Frame3d
-eyeFrame (Projection properties) =
-    properties.eyeFrame
+frame : Camera -> Frame3d
+frame (Camera properties) =
+    properties.frame
 
 
-screenWidth : Projection -> Float
-screenWidth (Projection properties) =
+screenWidth : Camera -> Float
+screenWidth (Camera properties) =
     properties.screenWidth
 
 
-screenHeight : Projection -> Float
-screenHeight (Projection properties) =
+screenHeight : Camera -> Float
+screenHeight (Camera properties) =
     properties.screenHeight
 
 
-matrix : Projection -> Mat4
-matrix (Projection properties) =
-    properties.matrix
+projectionMatrix : Camera -> Mat4
+projectionMatrix (Camera properties) =
+    properties.projectionMatrix

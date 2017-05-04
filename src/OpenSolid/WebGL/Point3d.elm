@@ -14,8 +14,8 @@ module OpenSolid.WebGL.Point3d
 
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
-import OpenSolid.WebGL.Projection as Projection exposing (Projection)
 import OpenSolid.WebGL.Bootstrap.Point3d as Bootstrap
+import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
 import Math.Matrix4 exposing (Mat4)
@@ -50,23 +50,23 @@ toVertexPosition point =
     { vertexPosition = toVec3 point }
 
 
-toScreenSpace : Projection -> Point3d -> Point2d
-toScreenSpace projection point =
+toScreenSpace : Camera -> Point3d -> Point2d
+toScreenSpace camera point =
     let
         projectionMatrix =
-            Projection.matrix projection
+            Camera.projectionMatrix camera
 
         viewSpacePoint =
-            Point3d.relativeTo (Projection.eyeFrame projection) point
+            Point3d.relativeTo (Camera.frame camera) point
 
         normalizedCoordinates =
             Math.Matrix4.transform projectionMatrix (toVec3 viewSpacePoint)
 
         halfWidth =
-            0.5 * Projection.screenWidth projection
+            0.5 * Camera.screenWidth camera
 
         halfHeight =
-            0.5 * Projection.screenHeight projection
+            0.5 * Camera.screenHeight camera
 
         x =
             halfWidth + halfWidth * Math.Vector3.getX normalizedCoordinates
