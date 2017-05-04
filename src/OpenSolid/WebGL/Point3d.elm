@@ -15,6 +15,7 @@ module OpenSolid.WebGL.Point3d
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
 import OpenSolid.WebGL.Projection as Projection exposing (Projection)
+import OpenSolid.WebGL.Bootstrap.Point3d as Bootstrap
 import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
 import Math.Matrix4 exposing (Mat4)
@@ -27,8 +28,8 @@ import Math.Matrix4 exposing (Mat4)
 
 -}
 toVec3 : Point3d -> Vec3
-toVec3 (Point3d ( x, y, z )) =
-    Math.Vector3.vec3 x y z
+toVec3 =
+    Bootstrap.toVec3
 
 
 {-| Convert a `Point3d` to a `Vec4`. The resulting `Vec4` will have a W
@@ -40,8 +41,8 @@ when performing matrix transformations.
 
 -}
 toVec4 : Point3d -> Vec4
-toVec4 (Point3d ( x, y, z )) =
-    Math.Vector4.vec4 x y z 1
+toVec4 =
+    Bootstrap.toVec4
 
 
 toVertexPosition : Point3d -> { vertexPosition : Vec3 }
