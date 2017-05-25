@@ -345,7 +345,7 @@ rotate frame dx dy =
             Just direction2d ->
                 let
                     axialDirection =
-                        (Direction2d.perpendicularTo direction2d)
+                        Direction2d.perpendicularTo direction2d
                             |> Direction2d.placeOnto SketchPlane3d.yz
 
                     rotationAxis =
