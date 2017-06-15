@@ -1,37 +1,37 @@
 module Teapot exposing (..)
 
-import OpenSolid.Geometry.Types exposing (..)
-import OpenSolid.Frame3d as Frame3d
+import Color exposing (Color)
+import Html exposing (Attribute, Html)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Http
+import Json.Decode as Decode exposing (Decoder)
+import Math.Matrix4 exposing (Mat4)
+import Math.Vector3 exposing (Vec3)
+import Math.Vector4 exposing (Vec4)
+import Mouse
 import OpenSolid.Axis3d as Axis3d
 import OpenSolid.Direction2d as Direction2d
 import OpenSolid.Direction3d as Direction3d
-import OpenSolid.Vector2d as Vector2d
+import OpenSolid.Frame3d as Frame3d
+import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point2d as Point2d
 import OpenSolid.Point3d as Point3d
-import OpenSolid.Vector3d as Vector3d
-import OpenSolid.Triangle3d as Triangle3d
 import OpenSolid.SketchPlane3d as SketchPlane3d
-import OpenSolid.WebGL.Frame3d as Frame3d
-import OpenSolid.WebGL.Vector3d as Vector3d
-import OpenSolid.WebGL.Direction3d as Direction3d
-import OpenSolid.WebGL.Point3d as Point3d
+import OpenSolid.Triangle3d as Triangle3d
+import OpenSolid.Vector2d as Vector2d
+import OpenSolid.Vector3d as Vector3d
 import OpenSolid.WebGL.Color as Color
-import Touch exposing (Touch, TouchEvent(..))
+import OpenSolid.WebGL.Direction3d as Direction3d
+import OpenSolid.WebGL.Frame3d as Frame3d
+import OpenSolid.WebGL.Point3d as Point3d
+import OpenSolid.WebGL.Vector3d as Vector3d
 import SingleTouch
-import Math.Vector3 exposing (Vec3)
-import Math.Vector4 exposing (Vec4)
-import Math.Matrix4 exposing (Mat4)
+import Task
+import Touch exposing (Touch, TouchEvent(..))
 import WebGL exposing (Mesh)
 import WebGL.Settings
-import Mouse
-import Task
-import Color exposing (Color)
 import Window
-import Http
-import Html exposing (Html, Attribute)
-import Html.Attributes as Attributes
-import Html.Events as Events
-import Json.Decode as Decode exposing (Decoder)
 
 
 -- Types
@@ -174,7 +174,7 @@ meshDecoder =
                         vertices
                         normals
             in
-                WebGL.indexedTriangles attributes faces
+            WebGL.indexedTriangles attributes faces
         )
         (Decode.field "vertices" (Decode.list Decode.float))
         (Decode.field "normals" (Decode.list Decode.float))
@@ -237,7 +237,7 @@ projectionMatrix { width, height } =
         zFar =
             100
     in
-        Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
+    Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
 
 
 entity : Mesh Attributes -> Frame3d -> Window.Size -> WebGL.Entity
@@ -251,7 +251,7 @@ entity mesh placementFrame windowSize =
             , faceColor = Color.toVec4 faceColor
             }
     in
-        WebGL.entity vertexShader fragmentShader mesh uniforms
+    WebGL.entity vertexShader fragmentShader mesh uniforms
 
 
 
@@ -284,7 +284,7 @@ init =
                 , Http.send LoadModel (Http.get "teapot.json" meshDecoder)
                 ]
     in
-        ( model, cmds )
+    ( model, cmds )
 
 
 dragAttributes : List (Attribute Msg)
@@ -298,12 +298,12 @@ dragAttributes =
             SingleTouch.onSingleTouch touchEvent Touch.preventAndStop .touch
                 |> Attributes.map (touchToPoint >> pointToMsg)
     in
-        [ onMouseDown StartRotatingAt
-        , onTouch TouchStart StartRotatingAt
-        , onTouch TouchMove PointerMovedTo
-        , onTouch TouchEnd (always StopRotating)
-        , onTouch TouchCancel (always StopRotating)
-        ]
+    [ onMouseDown StartRotatingAt
+    , onTouch TouchStart StartRotatingAt
+    , onTouch TouchMove PointerMovedTo
+    , onTouch TouchEnd (always StopRotating)
+    , onTouch TouchCancel (always StopRotating)
+    ]
 
 
 view : Model -> Html Msg
@@ -329,7 +329,7 @@ view model =
                 entities =
                     [ entity mesh model.placementFrame windowSize ]
             in
-                WebGL.toHtmlWith options attributes entities
+            WebGL.toHtmlWith options attributes entities
 
         _ ->
             Html.text "Loading model..."
@@ -341,26 +341,26 @@ rotate frame dx dy =
         dragVector =
             Vector2d ( dx, dy )
     in
-        case Vector2d.direction dragVector of
-            Just direction2d ->
-                let
-                    axialDirection =
-                        Direction2d.perpendicularTo direction2d
-                            |> Direction2d.placeOnto SketchPlane3d.yz
+    case Vector2d.direction dragVector of
+        Just direction2d ->
+            let
+                axialDirection =
+                    Direction2d.perpendicularTo direction2d
+                        |> Direction2d.placeOnto SketchPlane3d.yz
 
-                    rotationAxis =
-                        Axis3d
-                            { originPoint = Point3d.origin
-                            , direction = axialDirection
-                            }
+                rotationAxis =
+                    Axis3d
+                        { originPoint = Point3d.origin
+                        , direction = axialDirection
+                        }
 
-                    rotationAngle =
-                        degrees 1 * Vector2d.length dragVector
-                in
-                    frame |> Frame3d.rotateAround rotationAxis rotationAngle
+                rotationAngle =
+                    degrees 1 * Vector2d.length dragVector
+            in
+            frame |> Frame3d.rotateAround rotationAxis rotationAngle
 
-            Nothing ->
-                frame
+        Nothing ->
+            frame
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -389,7 +389,7 @@ update message model =
                                 , dragPoint = Just newPoint
                             }
                     in
-                        ( updatedModel, Cmd.none )
+                    ( updatedModel, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -420,7 +420,7 @@ subscriptions model =
                 Nothing ->
                     Sub.none
     in
-        Sub.batch [ dragEvents, Window.resizes SetWindowSize ]
+    Sub.batch [ dragEvents, Window.resizes SetWindowSize ]
 
 
 main : Program Never Model Msg
