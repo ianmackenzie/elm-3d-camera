@@ -311,6 +311,9 @@ view model =
     case ( model.windowSize, model.mesh () ) of
         ( Just windowSize, Just mesh ) ->
             let
+                overflowAttribute =
+                    Attributes.style [ ( "overflow", "hidden" ) ]
+
                 widthAttribute =
                     Attributes.width windowSize.width
 
@@ -324,7 +327,7 @@ view model =
                     ]
 
                 attributes =
-                    widthAttribute :: heightAttribute :: dragAttributes
+                    overflowAttribute :: widthAttribute :: heightAttribute :: dragAttributes
 
                 entities =
                     [ entity mesh model.placementFrame windowSize ]
