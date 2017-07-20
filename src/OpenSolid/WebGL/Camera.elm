@@ -1,17 +1,17 @@
 module OpenSolid.WebGL.Camera
     exposing
         ( Camera
-        , perspective
-        , orthographic
         , frame
-        , screenWidth
-        , screenHeight
+        , orthographic
+        , perspective
         , projectionMatrix
+        , screenHeight
+        , screenWidth
         )
 
+import Math.Matrix4 as Matrix4 exposing (Mat4)
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.WebGL.Frame3d as Frame3d
-import Math.Matrix4 as Matrix4 exposing (Mat4)
 
 
 type Camera
@@ -35,12 +35,12 @@ perspective { frame, screenWidth, screenHeight, verticalFov, zNear, zFar } =
         projectionMatrix =
             Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar
     in
-        Camera
-            { frame = frame
-            , screenWidth = screenWidth
-            , screenHeight = screenHeight
-            , projectionMatrix = projectionMatrix
-            }
+    Camera
+        { frame = frame
+        , screenWidth = screenWidth
+        , screenHeight = screenHeight
+        , projectionMatrix = projectionMatrix
+        }
 
 
 orthographic : { frame : Frame3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, zNear : Float, zFar : Float } -> Camera
@@ -67,12 +67,12 @@ orthographic { frame, screenWidth, screenHeight, viewportHeight, zNear, zFar } =
         projectionMatrix =
             Matrix4.makeOrtho left right bottom top zNear zFar
     in
-        Camera
-            { frame = frame
-            , screenWidth = screenWidth
-            , screenHeight = screenHeight
-            , projectionMatrix = projectionMatrix
-            }
+    Camera
+        { frame = frame
+        , screenWidth = screenWidth
+        , screenHeight = screenHeight
+        , projectionMatrix = projectionMatrix
+        }
 
 
 frame : Camera -> Frame3d
