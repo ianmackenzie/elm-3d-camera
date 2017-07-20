@@ -1,9 +1,9 @@
 module OpenSolid.WebGL.Point3d
     exposing
-        ( toVec3
+        ( toScreenSpace
+        , toVec3
         , toVec4
         , toVertexPosition
-        , toScreenSpace
         )
 
 {-| Utility functions for converting `Point3d` values to WebGL types.
@@ -12,13 +12,13 @@ module OpenSolid.WebGL.Point3d
 
 -}
 
+import Math.Matrix4 exposing (Mat4)
+import Math.Vector3 exposing (Vec3)
+import Math.Vector4 exposing (Vec4)
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
 import OpenSolid.WebGL.Bootstrap.Point3d as Bootstrap
 import OpenSolid.WebGL.Camera as Camera exposing (Camera)
-import Math.Vector3 exposing (Vec3)
-import Math.Vector4 exposing (Vec4)
-import Math.Matrix4 exposing (Mat4)
 
 
 {-| Convert a `Point3d` to a `Vec3`.
@@ -74,4 +74,4 @@ toScreenSpace camera point =
         y =
             halfHeight + halfHeight * Math.Vector3.getY normalizedCoordinates
     in
-        Point2d ( x, y )
+    Point2d ( x, y )

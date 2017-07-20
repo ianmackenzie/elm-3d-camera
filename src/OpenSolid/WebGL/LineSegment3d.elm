@@ -1,14 +1,14 @@
 module OpenSolid.WebGL.LineSegment3d
     exposing
-        ( vertexPositions
-        , toScreenSpace
+        ( toScreenSpace
+        , vertexPositions
         )
 
-import OpenSolid.Geometry.Types exposing (..)
-import OpenSolid.WebGL.Point3d as Point3d
-import OpenSolid.WebGL.Camera exposing (Camera)
-import OpenSolid.LineSegment3d as LineSegment3d
 import Math.Vector3 exposing (Vec3)
+import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.LineSegment3d as LineSegment3d
+import OpenSolid.WebGL.Camera exposing (Camera)
+import OpenSolid.WebGL.Point3d as Point3d
 
 
 vertexPositions : LineSegment3d -> ( { vertexPosition : Vec3 }, { vertexPosition : Vec3 } )
@@ -28,7 +28,7 @@ toScreenSpace camera lineSegment =
         ( p1, p2 ) =
             LineSegment3d.endpoints lineSegment
     in
-        LineSegment2d
-            ( Point3d.toScreenSpace camera p1
-            , Point3d.toScreenSpace camera p2
-            )
+    LineSegment2d
+        ( Point3d.toScreenSpace camera p1
+        , Point3d.toScreenSpace camera p2
+        )
