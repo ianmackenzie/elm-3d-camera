@@ -23,14 +23,14 @@ type Camera
         }
 
 
-perspective : { frame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFov : Float, zNear : Float, zFar : Float } -> Camera
-perspective { frame, screenWidth, screenHeight, verticalFov, zNear, zFar } =
+perspective : { frame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFieldOfView : Float, zNear : Float, zFar : Float } -> Camera
+perspective { frame, screenWidth, screenHeight, verticalFieldOfView, zNear, zFar } =
     let
         aspectRatio =
             screenWidth / screenHeight
 
         fovInDegrees =
-            verticalFov / degrees 1
+            verticalFieldOfView / degrees 1
 
         projectionMatrix =
             Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar
