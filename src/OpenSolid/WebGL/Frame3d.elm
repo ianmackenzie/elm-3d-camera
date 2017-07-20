@@ -1,9 +1,9 @@
 module OpenSolid.WebGL.Frame3d
     exposing
-        ( modelMatrix
-        , viewMatrix
+        ( lookAt
+        , modelMatrix
         , modelViewMatrix
-        , lookAt
+        , viewMatrix
         )
 
 {-| Functions for constructing WebGL model and view matrices from `Frame3d`
@@ -13,14 +13,14 @@ values.
 
 -}
 
-import OpenSolid.Geometry.Types exposing (..)
+import Math.Matrix4 exposing (Mat4)
+import OpenSolid.Direction3d as Direction3d
 import OpenSolid.Frame3d as Frame3d
+import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
 import OpenSolid.Vector3d as Vector3d
-import OpenSolid.Direction3d as Direction3d
 import OpenSolid.WebGL.Bootstrap.Point3d as Point3d
 import OpenSolid.WebGL.Direction3d as Direction3d
-import Math.Matrix4 exposing (Mat4)
 
 
 {-| Construct a WebGL [model matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-model-matrix)
@@ -52,7 +52,7 @@ modelMatrix frame =
 from a `Frame3d` that defines the position and orientation of a camera.
 Multiplying by this matrix transforms from world coordinates to eye coordinates.
 
-Note that according to OpenGL convention, the view direction is the *negative* Z
+Note that according to OpenGL convention, the view direction is the _negative_ Z
 direction of the frame. The positive Z direction of the frame is 'out of the
 screen', the positive X direction is to the right and the positive Y direction
 is up.
@@ -97,28 +97,28 @@ lookAt { focalPoint, eyePoint, upDirection } =
         xVector =
             Vector3d.crossProduct yVector zVector
     in
-        case Vector3d.orthonormalize ( zVector, yVector, xVector ) of
-            Just ( zDirection, yDirection, xDirection ) ->
-                Frame3d
-                    { originPoint = eyePoint
-                    , xDirection = xDirection
-                    , yDirection = yDirection
-                    , zDirection = zDirection
-                    }
+    case Vector3d.orthonormalize ( zVector, yVector, xVector ) of
+        Just ( zDirection, yDirection, xDirection ) ->
+            Frame3d
+                { originPoint = eyePoint
+                , xDirection = xDirection
+                , yDirection = yDirection
+                , zDirection = zDirection
+                }
 
-            Nothing ->
-                case Vector3d.direction zVector of
-                    Just zDirection ->
-                        let
-                            ( xDirection, yDirection ) =
-                                Direction3d.perpendicularBasis zDirection
-                        in
-                            Frame3d
-                                { originPoint = eyePoint
-                                , xDirection = xDirection
-                                , yDirection = yDirection
-                                , zDirection = zDirection
-                                }
+        Nothing ->
+            case Vector3d.direction zVector of
+                Just zDirection ->
+                    let
+                        ( xDirection, yDirection ) =
+                            Direction3d.perpendicularBasis zDirection
+                    in
+                    Frame3d
+                        { originPoint = eyePoint
+                        , xDirection = xDirection
+                        , yDirection = yDirection
+                        , zDirection = zDirection
+                        }
 
-                    Nothing ->
-                        Frame3d.at eyePoint
+                Nothing ->
+                    Frame3d.at eyePoint
