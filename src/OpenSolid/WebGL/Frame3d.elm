@@ -32,20 +32,36 @@ functions).
 modelMatrix : Frame3d -> Mat4
 modelMatrix frame =
     let
-        (Frame3d { originPoint, xDirection, yDirection, zDirection }) =
-            frame
+        ( x0, y0, z0 ) =
+            Point3d.coordinates (Frame3d.originPoint frame)
 
-        translationMatrix =
-            Math.Matrix4.makeTranslate
-                (Point3d.toVec3 originPoint)
+        ( x1, y1, z1 ) =
+            Direction3d.components (Frame3d.xDirection frame)
 
-        rotationMatrix =
-            Math.Matrix4.makeBasis
-                (Direction3d.toVec3 xDirection)
-                (Direction3d.toVec3 yDirection)
-                (Direction3d.toVec3 zDirection)
+        ( x2, y2, z2 ) =
+            Direction3d.components (Frame3d.yDirection frame)
+
+        ( x3, y3, z3 ) =
+            Direction3d.components (Frame3d.zDirection frame)
     in
-        Math.Matrix4.mul translationMatrix rotationMatrix
+    Math.Matrix4.fromRecord
+        { m11 = x1
+        , m21 = y1
+        , m31 = z1
+        , m41 = 0
+        , m12 = x2
+        , m22 = y2
+        , m32 = z2
+        , m42 = 0
+        , m13 = x3
+        , m23 = y3
+        , m33 = z3
+        , m43 = 0
+        , m14 = x0
+        , m24 = y0
+        , m34 = z0
+        , m44 = 1
+        }
 
 
 {-| Construct a WebGL [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
