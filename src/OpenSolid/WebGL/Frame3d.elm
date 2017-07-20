@@ -124,6 +124,11 @@ lookAt { focalPoint, eyePoint, upDirection } =
         Nothing ->
             case Vector3d.direction zVector of
                 Just zDirection ->
+                    -- The view vector must be parallel to the up direction,
+                    -- since it is non-zero and therefore otherwise would have
+                    -- resulted in a valid orthonormalization; therefore, choose
+                    -- an arbitrary 'up' direction that is perpendicular to the
+                    -- view direction
                     let
                         ( xDirection, yDirection ) =
                             Direction3d.perpendicularBasis zDirection
