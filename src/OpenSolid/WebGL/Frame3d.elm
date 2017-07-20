@@ -78,8 +78,8 @@ the `linear-algebra` library provides [several](http://package.elm-lang.org/pack
 
 -}
 viewMatrix : Frame3d -> Mat4
-viewMatrix =
-    modelMatrix >> Math.Matrix4.inverseOrthonormal
+viewMatrix frame =
+    modelMatrix (Frame3d.relativeTo frame Frame3d.xyz)
 
 
 {-| Construct a WebGL model-view matrix from one `Frame3d` that defines the
