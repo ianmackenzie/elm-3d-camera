@@ -223,19 +223,23 @@ fragmentShader =
 projectionMatrix : Window.Size -> Mat4
 projectionMatrix { width, height } =
     let
-        fovY =
+        fieldOfViewInDegrees =
             30
 
         aspectRatio =
             toFloat width / toFloat height
 
-        zNear =
+        nearClipDistance =
             0.1
 
-        zFar =
+        farClipDistance =
             100
     in
-    Math.Matrix4.makePerspective fovY aspectRatio zNear zFar
+    Math.Matrix4.makePerspective
+        fieldOfViewInDegrees
+        aspectRatio
+        nearClipDistance
+        farClipDistance
 
 
 entity : Mesh Attributes -> Frame3d -> Window.Size -> WebGL.Entity

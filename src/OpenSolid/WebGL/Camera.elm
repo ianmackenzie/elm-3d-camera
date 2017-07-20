@@ -23,8 +23,8 @@ type Camera
         }
 
 
-perspective : { frame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFieldOfView : Float, zNear : Float, zFar : Float } -> Camera
-perspective { frame, screenWidth, screenHeight, verticalFieldOfView, zNear, zFar } =
+perspective : { frame : Frame3d, screenWidth : Float, screenHeight : Float, verticalFieldOfView : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera
+perspective { frame, screenWidth, screenHeight, verticalFieldOfView, nearClipDistance, farClipDistance } =
     let
         aspectRatio =
             screenWidth / screenHeight
@@ -33,7 +33,7 @@ perspective { frame, screenWidth, screenHeight, verticalFieldOfView, zNear, zFar
             verticalFieldOfView / degrees 1
 
         projectionMatrix =
-            Matrix4.makePerspective fovInDegrees aspectRatio zNear zFar
+            Matrix4.makePerspective fovInDegrees aspectRatio nearClipDistance farClipDistance
     in
     Camera
         { frame = frame
@@ -43,8 +43,8 @@ perspective { frame, screenWidth, screenHeight, verticalFieldOfView, zNear, zFar
         }
 
 
-orthographic : { frame : Frame3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, zNear : Float, zFar : Float } -> Camera
-orthographic { frame, screenWidth, screenHeight, viewportHeight, zNear, zFar } =
+orthographic : { frame : Frame3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera
+orthographic { frame, screenWidth, screenHeight, viewportHeight, nearClipDistance, farClipDistance } =
     let
         aspectRatio =
             screenWidth / screenHeight
@@ -65,7 +65,7 @@ orthographic { frame, screenWidth, screenHeight, viewportHeight, zNear, zFar } =
             viewportHeight / 2
 
         projectionMatrix =
-            Matrix4.makeOrtho left right bottom top zNear zFar
+            Matrix4.makeOrtho left right bottom top nearClipDistance farClipDistance
     in
     Camera
         { frame = frame
