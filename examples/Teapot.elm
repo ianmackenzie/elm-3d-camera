@@ -1,13 +1,12 @@
 module Teapot exposing (..)
 
-import Color exposing (Color)
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Math.Matrix4 exposing (Mat4)
-import Math.Vector3 exposing (Vec3)
+import Math.Vector3 exposing (Vec3, vec3)
 import Math.Vector4 exposing (Vec4)
 import Mouse
 import OpenSolid.Axis3d as Axis3d
@@ -21,7 +20,6 @@ import OpenSolid.SketchPlane3d as SketchPlane3d
 import OpenSolid.Triangle3d as Triangle3d
 import OpenSolid.Vector2d as Vector2d
 import OpenSolid.Vector3d as Vector3d
-import OpenSolid.WebGL.Color as Color
 import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Frame3d as Frame3d
 import OpenSolid.WebGL.Point3d as Point3d
@@ -64,7 +62,7 @@ type alias Uniforms =
     , viewMatrix : Mat4
     , projectionMatrix : Mat4
     , lightDirection : Vec3
-    , faceColor : Vec4
+    , faceColor : Vec3
     }
 
 
@@ -92,9 +90,9 @@ lightDirection =
         |> Maybe.withDefault Direction3d.negativeZ
 
 
-faceColor : Color
+faceColor : Vec3
 faceColor =
-    Color.rgb 51 77 230
+    vec3 0.2 0.3 0.9
 
 
 eyeFrame : Frame3d
@@ -209,15 +207,14 @@ fragmentShader =
     [glsl|
         precision mediump float;
         uniform vec3 lightDirection;
-        uniform vec4 faceColor;
+        uniform vec3 faceColor;
         varying vec3 position;
         varying vec3 normal;
 
         void main () {
             float dotProduct = dot(-normal, lightDirection);
             float intensity = 0.4 + 0.6 * clamp(dotProduct, 0.0, 1.0);
-            vec3 rgb = faceColor.rgb * intensity;
-            gl_FragColor = vec4(rgb, faceColor.a);
+            gl_FragColor = vec4(faceColor * intensity, 1.0);
         }
     |]
 
@@ -248,7 +245,7 @@ entity mesh placementFrame windowSize =
             , modelMatrix = Frame3d.modelMatrix placementFrame
             , viewMatrix = Frame3d.viewMatrix eyeFrame
             , lightDirection = Direction3d.toVec3 lightDirection
-            , faceColor = Color.toVec4 faceColor
+            , faceColor = faceColor
             }
     in
     WebGL.entity vertexShader fragmentShader mesh uniforms
