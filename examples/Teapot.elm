@@ -52,8 +52,8 @@ type alias Model =
 
 
 type alias Attributes =
-    { vertexPosition : Vec3
-    , vertexNormal : Vec3
+    { position : Vec3
+    , normal : Vec3
     }
 
 
@@ -67,8 +67,8 @@ type alias Uniforms =
 
 
 type alias Varyings =
-    { position : Vec3
-    , normal : Vec3
+    { interpolatedPosition : Vec3
+    , interpolatedNormal : Vec3
     }
 
 
@@ -165,8 +165,8 @@ meshDecoder =
                 attributes =
                     List.map2
                         (\vertex normal ->
-                            { vertexPosition = Point3d.toVec3 vertex
-                            , vertexNormal = Direction3d.toVec3 normal
+                            { position = Point3d.toVec3 vertex
+                            , normal = Direction3d.toVec3 normal
                             }
                         )
                         vertices
@@ -186,18 +186,18 @@ meshDecoder =
 vertexShader : WebGL.Shader Attributes Uniforms Varyings
 vertexShader =
     [glsl|
-        attribute vec3 vertexPosition;
-        attribute vec3 vertexNormal;
+        attribute vec3 position;
+        attribute vec3 normal;
         uniform mat4 viewMatrix;
         uniform mat4 modelMatrix;
         uniform mat4 projectionMatrix;
-        varying vec3 position;
-        varying vec3 normal;
+        varying vec3 interpolatedPosition;
+        varying vec3 interpolatedNormal;
 
         void main () {
-          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);
-          position = (modelMatrix * vec4(vertexPosition, 1.0)).xyz;
-          normal = (modelMatrix * vec4(vertexNormal, 0.0)).xyz;
+          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+          interpolatedPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+          interpolatedNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
         }
     |]
 
@@ -208,10 +208,11 @@ fragmentShader =
         precision mediump float;
         uniform vec3 lightDirection;
         uniform vec3 faceColor;
-        varying vec3 position;
-        varying vec3 normal;
+        varying vec3 interpolatedPosition;
+        varying vec3 interpolatedNormal;
 
         void main () {
+            vec3 normal = normalize(interpolatedNormal);
             float dotProduct = dot(-normal, lightDirection);
             float intensity = 0.4 + 0.6 * clamp(dotProduct, 0.0, 1.0);
             gl_FragColor = vec4(faceColor * intensity, 1.0);

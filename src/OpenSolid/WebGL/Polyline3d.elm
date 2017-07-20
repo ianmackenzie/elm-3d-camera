@@ -11,9 +11,13 @@ import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
 
-vertexPositions : Polyline3d -> List { vertexPosition : Vec3 }
+vertexPositions : Polyline3d -> List { position : Vec3 }
 vertexPositions polyline =
-    List.map Point3d.toVertexPosition (Polyline3d.vertices polyline)
+    let
+        toPositionAttribute point =
+            { position = Point3d.toVec3 point }
+    in
+    List.map toPositionAttribute (Polyline3d.vertices polyline)
 
 
 toScreenSpace : Camera -> Polyline3d -> Polyline2d

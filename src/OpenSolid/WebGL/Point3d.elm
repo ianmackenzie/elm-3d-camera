@@ -3,7 +3,6 @@ module OpenSolid.WebGL.Point3d
         ( toScreenSpace
         , toVec3
         , toVec4
-        , toVertexPosition
         )
 
 {-| Utility functions for converting `Point3d` values to WebGL types.
@@ -43,11 +42,6 @@ when performing matrix transformations.
 toVec4 : Point3d -> Vec4
 toVec4 =
     Bootstrap.toVec4
-
-
-toVertexPosition : Point3d -> { vertexPosition : Vec3 }
-toVertexPosition point =
-    { vertexPosition = toVec3 point }
 
 
 toScreenSpace : Camera -> Point3d -> Point2d

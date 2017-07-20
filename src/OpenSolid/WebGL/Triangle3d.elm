@@ -13,19 +13,19 @@ import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
 
 
-vertexPositions : Triangle3d -> ( { vertexPosition : Vec3 }, { vertexPosition : Vec3 }, { vertexPosition : Vec3 } )
+vertexPositions : Triangle3d -> ( { position : Vec3 }, { position : Vec3 }, { position : Vec3 } )
 vertexPositions triangle =
     let
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
-        ( Point3d.toVertexPosition p1
-        , Point3d.toVertexPosition p2
-        , Point3d.toVertexPosition p3
-        )
+    ( { position = Point3d.toVec3 p1 }
+    , { position = Point3d.toVec3 p2 }
+    , { position = Point3d.toVec3 p3 }
+    )
 
 
-vertexPositionsAndNormals : Triangle3d -> ( { vertexPosition : Vec3, vertexNormal : Vec3 }, { vertexPosition : Vec3, vertexNormal : Vec3 }, { vertexPosition : Vec3, vertexNormal : Vec3 } )
+vertexPositionsAndNormals : Triangle3d -> ( { position : Vec3, normal : Vec3 }, { position : Vec3, normal : Vec3 }, { position : Vec3, normal : Vec3 } )
 vertexPositionsAndNormals triangle =
     let
         normalVector =
@@ -39,10 +39,10 @@ vertexPositionsAndNormals triangle =
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
-        ( { vertexPosition = Point3d.toVec3 p1, vertexNormal = normalVector }
-        , { vertexPosition = Point3d.toVec3 p2, vertexNormal = normalVector }
-        , { vertexPosition = Point3d.toVec3 p3, vertexNormal = normalVector }
-        )
+    ( { position = Point3d.toVec3 p1, normal = normalVector }
+    , { position = Point3d.toVec3 p2, normal = normalVector }
+    , { position = Point3d.toVec3 p3, normal = normalVector }
+    )
 
 
 toScreenSpace : Camera -> Triangle3d -> Triangle2d
