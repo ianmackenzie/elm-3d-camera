@@ -19,7 +19,6 @@ import OpenSolid.Frame3d as Frame3d
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
 import OpenSolid.Vector3d as Vector3d
-import OpenSolid.WebGL.Bootstrap.Point3d as Point3d
 import OpenSolid.WebGL.Direction3d as Direction3d
 
 

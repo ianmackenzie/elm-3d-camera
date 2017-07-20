@@ -16,7 +16,6 @@ import Math.Vector3 exposing (Vec3)
 import Math.Vector4 exposing (Vec4)
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Point3d as Point3d
-import OpenSolid.WebGL.Bootstrap.Point3d as Bootstrap
 import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 
 
@@ -27,8 +26,8 @@ import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 
 -}
 toVec3 : Point3d -> Vec3
-toVec3 =
-    Bootstrap.toVec3
+toVec3 (Point3d ( x, y, z )) =
+    Math.Vector3.vec3 x y z
 
 
 {-| Convert a `Point3d` to a `Vec4`. The resulting `Vec4` will have a W
@@ -40,8 +39,8 @@ when performing matrix transformations.
 
 -}
 toVec4 : Point3d -> Vec4
-toVec4 =
-    Bootstrap.toVec4
+toVec4 (Point3d ( x, y, z )) =
+    Math.Vector4.vec4 x y z 1
 
 
 toScreenSpace : Camera -> Point3d -> Point2d
