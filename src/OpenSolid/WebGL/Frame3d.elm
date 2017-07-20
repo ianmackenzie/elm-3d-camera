@@ -141,4 +141,16 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         }
 
                 Nothing ->
-                    Frame3d.at eyePoint
+                    -- The view vector is zero (the eye point and focal point
+                    -- are coincident), so construct an arbitrary frame with the
+                    -- given up direction
+                    let
+                        ( zDirection, xDirection ) =
+                            Direction3d.perpendicularBasis upDirection
+                    in
+                    Frame3d
+                        { originPoint = eyePoint
+                        , xDirection = xDirection
+                        , yDirection = upDirection
+                        , zDirection = zDirection
+                        }
