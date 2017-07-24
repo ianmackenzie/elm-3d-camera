@@ -11,15 +11,13 @@ import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
 
-vertexPositions : LineSegment3d -> ( { position : Vec3 }, { position : Vec3 } )
+vertexPositions : LineSegment3d -> ( Vec3, Vec3 )
 vertexPositions lineSegment =
     let
         ( p1, p2 ) =
             LineSegment3d.endpoints lineSegment
     in
-    ( { position = Point3d.toVec3 p1 }
-    , { position = Point3d.toVec3 p2 }
-    )
+    ( Point3d.toVec3 p1, Point3d.toVec3 p2 )
 
 
 toScreenSpace : Camera -> LineSegment3d -> LineSegment2d

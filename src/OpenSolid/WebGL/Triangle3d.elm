@@ -13,35 +13,29 @@ import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
 
 
-vertexPositions : Triangle3d -> ( { position : Vec3 }, { position : Vec3 }, { position : Vec3 } )
+vertexPositions : Triangle3d -> ( Vec3, Vec3, Vec3 )
 vertexPositions triangle =
     let
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
-    ( { position = Point3d.toVec3 p1 }
-    , { position = Point3d.toVec3 p2 }
-    , { position = Point3d.toVec3 p3 }
-    )
+    ( Point3d.toVec3 p1, Point3d.toVec3 p2, Point3d.toVec3 p3 )
 
 
-vertexPositionsAndNormals : Triangle3d -> ( { position : Vec3, normal : Vec3 }, { position : Vec3, normal : Vec3 }, { position : Vec3, normal : Vec3 } )
+vertexPositionsAndNormals : Triangle3d -> ( ( Vec3, Vec3 ), ( Vec3, Vec3 ), ( Vec3, Vec3 ) )
 vertexPositionsAndNormals triangle =
     let
-        normalVector =
-            case Triangle3d.normalDirection triangle of
-                Just direction ->
-                    Direction3d.toVec3 direction
-
-                Nothing ->
-                    Vector3.vec3 0 0 0
-
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
+
+        normalVector =
+            Triangle3d.normalDirection triangle
+                |> Maybe.map Direction3d.toVec3
+                |> Maybe.withDefault (Vector3.vec3 0 0 0)
     in
-    ( { position = Point3d.toVec3 p1, normal = normalVector }
-    , { position = Point3d.toVec3 p2, normal = normalVector }
-    , { position = Point3d.toVec3 p3, normal = normalVector }
+    ( ( Point3d.toVec3 p1, normalVector )
+    , ( Point3d.toVec3 p2, normalVector )
+    , ( Point3d.toVec3 p3, normalVector )
     )
 
 
