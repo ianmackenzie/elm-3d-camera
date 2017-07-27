@@ -43,24 +43,9 @@ modelMatrix frame =
         ( x3, y3, z3 ) =
             Direction3d.components (Frame3d.zDirection frame)
     in
-    Math.Matrix4.fromRecord
-        { m11 = x1
-        , m21 = y1
-        , m31 = z1
-        , m41 = 0
-        , m12 = x2
-        , m22 = y2
-        , m32 = z2
-        , m42 = 0
-        , m13 = x3
-        , m23 = y3
-        , m33 = z3
-        , m43 = 0
-        , m14 = x0
-        , m24 = y0
-        , m34 = z0
-        , m44 = 1
-        }
+    Math.Matrix4.makeFromList
+        [ x1, y1, z1, 0, x2, y2, z2, 0, x3, y3, z3, 0, x0, y0, z0, 1 ]
+        |> Maybe.withDefault Math.Matrix4.identity
 
 
 {-| Construct a WebGL [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
