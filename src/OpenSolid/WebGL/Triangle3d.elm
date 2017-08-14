@@ -3,6 +3,12 @@ module OpenSolid.WebGL.Triangle3d
         ( toScreenSpace
         )
 
+{-|
+
+@docs toScreenSpace
+
+-}
+
 import Math.Vector3 as Vector3 exposing (Vec3)
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Triangle3d as Triangle3d
@@ -10,6 +16,10 @@ import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
 
+{-| Convert a triangle from 3D space to 2D screen (pixel) coordinates. The
+result will be in a coordinate system where (0,0) is the bottom left of the
+screen.
+-}
 toScreenSpace : Camera -> Triangle3d -> Triangle2d
 toScreenSpace camera triangle =
     let
