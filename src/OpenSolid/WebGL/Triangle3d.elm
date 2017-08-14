@@ -7,7 +7,6 @@ import Math.Vector3 as Vector3 exposing (Vec3)
 import OpenSolid.Geometry.Types exposing (..)
 import OpenSolid.Triangle3d as Triangle3d
 import OpenSolid.WebGL.Camera exposing (Camera)
-import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Point3d as Point3d
 
 

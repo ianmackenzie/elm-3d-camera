@@ -1,13 +1,8 @@
-module OpenSolid.WebGL.Point3d
-    exposing
-        ( toScreenSpace
-        , toVec3
-        , toVec4
-        )
+module OpenSolid.WebGL.Point3d exposing (toScreenSpace)
 
-{-| Utility functions for converting `Point3d` values to WebGL types.
+{-|
 
-@docs toVec3, toVec4
+@docs toScreenSpace
 
 -}
 
@@ -19,30 +14,9 @@ import OpenSolid.Point3d as Point3d
 import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 
 
-{-| Convert a `Point3d` to a `Vec3`.
-
-    Point3d.toVec3 (Point3d ( 2, 1, 3 ))
-    --> vec3 2 1 3
-
+{-| Convert a point from 3D space to 2D screen (pixel) coordinates. The result
+will be in a coordinate system where (0,0) is the bottom left of the screen.
 -}
-toVec3 : Point3d -> Vec3
-toVec3 (Point3d ( x, y, z )) =
-    Math.Vector3.vec3 x y z
-
-
-{-| Convert a `Point3d` to a `Vec4`. The resulting `Vec4` will have a W
-component of 1 so that it [is affected by translation](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/)
-when performing matrix transformations.
-
-    Point3d.toVec4 (Point3d ( 2, 1, 3 ))
-    --> vec4 2 1 3 1
-
--}
-toVec4 : Point3d -> Vec4
-toVec4 (Point3d ( x, y, z )) =
-    Math.Vector4.vec4 x y z 1
-
-
 toScreenSpace : Camera -> Point3d -> Point2d
 toScreenSpace camera point =
     let

@@ -17,9 +17,9 @@ import Math.Matrix4 exposing (Mat4)
 import OpenSolid.Direction3d as Direction3d
 import OpenSolid.Frame3d as Frame3d
 import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.Interop.LinearAlgebra.Frame3d as Frame3d
 import OpenSolid.Point3d as Point3d
 import OpenSolid.Vector3d as Vector3d
-import OpenSolid.WebGL.Direction3d as Direction3d
 
 
 {-| Construct a WebGL [model matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-model-matrix)
@@ -30,22 +30,7 @@ functions).
 -}
 modelMatrix : Frame3d -> Mat4
 modelMatrix frame =
-    let
-        ( x0, y0, z0 ) =
-            Point3d.coordinates (Frame3d.originPoint frame)
-
-        ( x1, y1, z1 ) =
-            Direction3d.components (Frame3d.xDirection frame)
-
-        ( x2, y2, z2 ) =
-            Direction3d.components (Frame3d.yDirection frame)
-
-        ( x3, y3, z3 ) =
-            Direction3d.components (Frame3d.zDirection frame)
-    in
-    Math.Matrix4.makeFromList
-        [ x1, y1, z1, 0, x2, y2, z2, 0, x3, y3, z3, 0, x0, y0, z0, 1 ]
-        |> Maybe.withDefault Math.Matrix4.identity
+    Frame3d.toMat4 frame
 
 
 {-| Construct a WebGL [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
@@ -63,7 +48,7 @@ the `linear-algebra` library provides [several](http://package.elm-lang.org/pack
 -}
 viewMatrix : Frame3d -> Mat4
 viewMatrix frame =
-    modelMatrix (Frame3d.relativeTo frame Frame3d.xyz)
+    Frame3d.toMat4 (Frame3d.relativeTo frame Frame3d.xyz)
 
 
 {-| Construct a WebGL model-view matrix from one `Frame3d` that defines the
@@ -82,7 +67,7 @@ instead of double-precision).
 -}
 modelViewMatrix : Frame3d -> Frame3d -> Mat4
 modelViewMatrix eyeFrame modelFrame =
-    modelMatrix (Frame3d.relativeTo eyeFrame modelFrame)
+    Frame3d.toMat4 (Frame3d.relativeTo eyeFrame modelFrame)
 
 
 lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Frame3d

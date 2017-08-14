@@ -14,16 +14,16 @@ import OpenSolid.Direction2d as Direction2d
 import OpenSolid.Direction3d as Direction3d
 import OpenSolid.Frame3d as Frame3d
 import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.Interop.LinearAlgebra.Direction3d as Direction3d
+import OpenSolid.Interop.LinearAlgebra.Point3d as Point3d
+import OpenSolid.Interop.LinearAlgebra.Vector3d as Vector3d
 import OpenSolid.Point2d as Point2d
 import OpenSolid.Point3d as Point3d
 import OpenSolid.SketchPlane3d as SketchPlane3d
 import OpenSolid.Triangle3d as Triangle3d
 import OpenSolid.Vector2d as Vector2d
 import OpenSolid.Vector3d as Vector3d
-import OpenSolid.WebGL.Direction3d as Direction3d
 import OpenSolid.WebGL.Frame3d as Frame3d
-import OpenSolid.WebGL.Point3d as Point3d
-import OpenSolid.WebGL.Vector3d as Vector3d
 import SingleTouch
 import Task
 import Touch exposing (Touch, TouchEvent(..))
