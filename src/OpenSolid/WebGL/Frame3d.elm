@@ -14,12 +14,11 @@ values.
 -}
 
 import Math.Matrix4 exposing (Mat4)
-import OpenSolid.Direction3d as Direction3d
-import OpenSolid.Frame3d as Frame3d
-import OpenSolid.Geometry.Types exposing (..)
+import OpenSolid.Direction3d as Direction3d exposing (Direction3d)
+import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
 import OpenSolid.Interop.LinearAlgebra.Frame3d as Frame3d
-import OpenSolid.Point3d as Point3d
-import OpenSolid.Vector3d as Vector3d
+import OpenSolid.Point3d as Point3d exposing (Point3d)
+import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
 
 
 {-| Construct a WebGL [model matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-model-matrix)
@@ -70,11 +69,12 @@ modelViewMatrix eyeFrame modelFrame =
     Frame3d.toMat4 (Frame3d.relativeTo eyeFrame modelFrame)
 
 
+{-| -}
 lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Frame3d
 lookAt { focalPoint, eyePoint, upDirection } =
     let
         zVector =
-            Point3d.vectorFrom focalPoint eyePoint
+            Vector3d.from focalPoint eyePoint
 
         yVector =
             Direction3d.toVector upDirection
@@ -84,7 +84,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
     in
     case Vector3d.orthonormalize ( zVector, yVector, xVector ) of
         Just ( zDirection, yDirection, xDirection ) ->
-            Frame3d
+            Frame3d.with
                 { originPoint = eyePoint
                 , xDirection = xDirection
                 , yDirection = yDirection
@@ -103,7 +103,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         ( xDirection, yDirection ) =
                             Direction3d.perpendicularBasis zDirection
                     in
-                    Frame3d
+                    Frame3d.with
                         { originPoint = eyePoint
                         , xDirection = xDirection
                         , yDirection = yDirection
@@ -118,7 +118,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         ( zDirection, xDirection ) =
                             Direction3d.perpendicularBasis upDirection
                     in
-                    Frame3d
+                    Frame3d.with
                         { originPoint = eyePoint
                         , xDirection = xDirection
                         , yDirection = upDirection

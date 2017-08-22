@@ -9,9 +9,8 @@ module OpenSolid.WebGL.Triangle3d
 
 -}
 
-import Math.Vector3 as Vector3 exposing (Vec3)
-import OpenSolid.Geometry.Types exposing (..)
-import OpenSolid.Triangle3d as Triangle3d
+import OpenSolid.Triangle2d as Triangle2d exposing (Triangle2d)
+import OpenSolid.Triangle3d as Triangle3d exposing (Triangle3d)
 import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
@@ -26,7 +25,7 @@ toScreenSpace camera triangle =
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
-    Triangle2d
+    Triangle2d.withVertices
         ( Point3d.toScreenSpace camera p1
         , Point3d.toScreenSpace camera p2
         , Point3d.toScreenSpace camera p3

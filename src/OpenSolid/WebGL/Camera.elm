@@ -10,8 +10,7 @@ module OpenSolid.WebGL.Camera
         )
 
 import Math.Matrix4 as Matrix4 exposing (Mat4)
-import OpenSolid.Geometry.Types exposing (..)
-import OpenSolid.WebGL.Frame3d as Frame3d
+import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
 
 
 type Camera
