@@ -9,14 +9,11 @@
         "../linear-algebra-interop/src"
     ],
     "exposed-modules": [
-        "OpenSolid.WebGL.Color",
-        "OpenSolid.WebGL.Vector2d",
-        "OpenSolid.WebGL.Vector3d",
-        "OpenSolid.WebGL.Direction2d",
-        "OpenSolid.WebGL.Direction3d",
-        "OpenSolid.WebGL.Point2d",
+        "OpenSolid.WebGL.Camera",
+        "OpenSolid.WebGL.Frame3d",
+        "OpenSolid.WebGL.LineSegment3d",
         "OpenSolid.WebGL.Point3d",
-        "OpenSolid.WebGL.Frame3d"
+        "OpenSolid.WebGL.Triangle3d"
     ],
     "dependencies": {
         "elm-community/linear-algebra": "3.1.1 <= v < 4.0.0",
