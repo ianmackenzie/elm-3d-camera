@@ -120,7 +120,7 @@ accumulateNormals components accumulated =
     case components of
         x :: y :: z :: rest ->
             accumulateNormals rest
-                (Direction3d.withComponents ( x, y, z ) :: accumulated)
+                (Direction3d.unsafe ( x, y, z ) :: accumulated)
 
         _ ->
             List.reverse accumulated
