@@ -60,9 +60,6 @@ is equivalent to
 
     Matrix4.mul (Frame3d.viewMatrix eyeFrame) (Frame3d.modelMatrix modelFrame)
 
-but more accurate (since internally `Mat4` values use single-precision floats
-instead of double-precision).
-
 -}
 modelViewMatrix : Frame3d -> Frame3d -> Mat4
 modelViewMatrix eyeFrame modelFrame =
