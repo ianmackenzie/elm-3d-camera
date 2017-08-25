@@ -1,8 +1,4 @@
-module OpenSolid.WebGL.Polyline3d
-    exposing
-        ( toScreenSpace
-        , vertexPositions
-        )
+module OpenSolid.WebGL.Polyline3d exposing (toScreenSpace)
 
 {-|
 
