@@ -4,6 +4,12 @@ module OpenSolid.WebGL.Polyline3d
         , vertexPositions
         )
 
+{-|
+
+@docs toScreenSpace
+
+-}
+
 import Math.Vector3 exposing (Vec3)
 import OpenSolid.Interop.LinearAlgebra.Point3d as Point3d
 import OpenSolid.Polyline2d as Polyline2d exposing (Polyline2d)
@@ -12,6 +18,10 @@ import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
 
+{-| Convert a polyline from 3D space to 2D screen (pixel) coordinates. The
+result will be in a coordinate system where (0,0) is the bottom left of the
+screen.
+-}
 toScreenSpace : Camera -> Polyline3d -> Polyline2d
 toScreenSpace camera polyline =
     Polyline3d.vertices polyline
