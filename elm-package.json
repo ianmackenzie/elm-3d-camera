@@ -12,6 +12,7 @@
         "OpenSolid.WebGL.Camera",
         "OpenSolid.WebGL.LineSegment3d",
         "OpenSolid.WebGL.Point3d",
+        "OpenSolid.WebGL.Polyline3d",
         "OpenSolid.WebGL.Triangle3d"
     ],
     "dependencies": {
