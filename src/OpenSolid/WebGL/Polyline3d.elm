@@ -12,12 +12,6 @@ import OpenSolid.WebGL.Camera exposing (Camera)
 import OpenSolid.WebGL.Point3d as Point3d
 
 
-vertexPositions : Polyline3d -> List Vec3
-vertexPositions polyline =
-    Polyline3d.vertices polyline
-        |> List.map Point3d.toVec3
-
-
 toScreenSpace : Camera -> Polyline3d -> Polyline2d
 toScreenSpace camera polyline =
     Polyline3d.vertices polyline
