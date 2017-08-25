@@ -103,7 +103,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
     in
     case Vector3d.orthonormalize ( zVector, yVector, xVector ) of
         Just ( zDirection, yDirection, xDirection ) ->
-            Frame3d.with
+            Frame3d.unsafe
                 { originPoint = eyePoint
                 , xDirection = xDirection
                 , yDirection = yDirection
@@ -122,7 +122,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         ( xDirection, yDirection ) =
                             Direction3d.perpendicularBasis zDirection
                     in
-                    Frame3d.with
+                    Frame3d.unsafe
                         { originPoint = eyePoint
                         , xDirection = xDirection
                         , yDirection = yDirection
@@ -137,7 +137,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         ( zDirection, xDirection ) =
                             Direction3d.perpendicularBasis upDirection
                     in
-                    Frame3d.with
+                    Frame3d.unsafe
                         { originPoint = eyePoint
                         , xDirection = xDirection
                         , yDirection = upDirection

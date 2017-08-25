@@ -92,7 +92,7 @@ faceColor =
 
 eyeFrame : Frame3d
 eyeFrame =
-    Frame3d.with
+    Frame3d.unsafe
         { originPoint = Point3d.withCoordinates ( 15, 0, 0 )
         , xDirection = Direction3d.y
         , yDirection = Direction3d.z
