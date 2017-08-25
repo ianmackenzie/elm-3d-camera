@@ -10,7 +10,6 @@
     ],
     "exposed-modules": [
         "OpenSolid.WebGL.Camera",
-        "OpenSolid.WebGL.Frame3d",
         "OpenSolid.WebGL.LineSegment3d",
         "OpenSolid.WebGL.Point3d",
         "OpenSolid.WebGL.Triangle3d"
