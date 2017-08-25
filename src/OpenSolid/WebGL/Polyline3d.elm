@@ -6,8 +6,6 @@ module OpenSolid.WebGL.Polyline3d exposing (toScreenSpace)
 
 -}
 
-import Math.Vector3 exposing (Vec3)
-import OpenSolid.Interop.LinearAlgebra.Point3d as Point3d
 import OpenSolid.Polyline2d as Polyline2d exposing (Polyline2d)
 import OpenSolid.Polyline3d as Polyline3d exposing (Polyline3d)
 import OpenSolid.WebGL.Camera exposing (Camera)
