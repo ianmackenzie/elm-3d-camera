@@ -1,7 +1,4 @@
-module OpenSolid.WebGL.Triangle3d
-    exposing
-        ( toScreenSpace
-        )
+module OpenSolid.WebGL.Triangle3d exposing (toScreenSpace)
 
 {-|
 
