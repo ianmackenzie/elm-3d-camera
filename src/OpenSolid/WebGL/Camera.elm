@@ -159,14 +159,8 @@ lookAt { focalPoint, eyePoint, upDirection } =
                     -- resulted in a valid orthonormalization; therefore, choose
                     -- an arbitrary 'up' direction that is perpendicular to the
                     -- view direction
-                    let
-                        ( xDirection, yDirection ) =
-                            Direction3d.perpendicularBasis zDirection
-                    in
-                    Frame3d.unsafe
+                    Frame3d.with
                         { originPoint = eyePoint
-                        , xDirection = xDirection
-                        , yDirection = yDirection
                         , zDirection = zDirection
                         }
 
