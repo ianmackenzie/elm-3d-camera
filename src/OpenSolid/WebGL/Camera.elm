@@ -142,7 +142,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
         xVector =
             Vector3d.crossProduct yVector zVector
     in
-    case Vector3d.orthonormalize ( zVector, yVector, xVector ) of
+    case Direction3d.orthonormalize ( zVector, yVector, xVector ) of
         Just ( zDirection, yDirection, xDirection ) ->
             Frame3d.unsafe
                 { originPoint = eyePoint
