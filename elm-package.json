@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Camera type and associated functions useful for WebGL rendering",
+    "summary": "Camera type for doing 3D rendering",
     "repository": "https://github.com/opensolid/camera.git",
     "license": "MPL-2.0",
     "source-directories": [
