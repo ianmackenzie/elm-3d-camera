@@ -1,4 +1,4 @@
-module OpenSolid.WebGL.Triangle3d exposing (toScreenSpace)
+module OpenSolid.Camera.Triangle3d exposing (toScreenSpace)
 
 {-|
 
@@ -6,10 +6,10 @@ module OpenSolid.WebGL.Triangle3d exposing (toScreenSpace)
 
 -}
 
+import OpenSolid.Camera exposing (Camera)
+import OpenSolid.Camera.Point3d as Point3d
 import OpenSolid.Triangle2d as Triangle2d exposing (Triangle2d)
 import OpenSolid.Triangle3d as Triangle3d exposing (Triangle3d)
-import OpenSolid.WebGL.Camera exposing (Camera)
-import OpenSolid.WebGL.Point3d as Point3d
 
 
 {-| Convert a triangle from 3D space to 2D screen (pixel) coordinates. The

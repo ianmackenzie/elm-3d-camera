@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Render 3D OpenSolid types using WebGL",
-    "repository": "https://github.com/opensolid/webgl.git",
+    "summary": "Camera type and associated functions useful for WebGL rendering",
+    "repository": "https://github.com/opensolid/camera.git",
     "license": "MPL-2.0",
     "source-directories": [
         "src",
@@ -9,11 +9,11 @@
         "../linear-algebra-interop/src"
     ],
     "exposed-modules": [
-        "OpenSolid.WebGL.Camera",
-        "OpenSolid.WebGL.LineSegment3d",
-        "OpenSolid.WebGL.Point3d",
-        "OpenSolid.WebGL.Polyline3d",
-        "OpenSolid.WebGL.Triangle3d"
+        "OpenSolid.Camera",
+        "OpenSolid.Camera.LineSegment3d",
+        "OpenSolid.Camera.Point3d",
+        "OpenSolid.Camera.Polyline3d",
+        "OpenSolid.Camera.Triangle3d"
     ],
     "dependencies": {
         "elm-community/linear-algebra": "3.1.1 <= v < 4.0.0",

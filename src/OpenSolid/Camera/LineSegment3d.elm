@@ -1,4 +1,4 @@
-module OpenSolid.WebGL.LineSegment3d exposing (toScreenSpace)
+module OpenSolid.Camera.LineSegment3d exposing (toScreenSpace)
 
 {-|
 
@@ -6,10 +6,10 @@ module OpenSolid.WebGL.LineSegment3d exposing (toScreenSpace)
 
 -}
 
+import OpenSolid.Camera exposing (Camera)
+import OpenSolid.Camera.Point3d as Point3d
 import OpenSolid.LineSegment2d as LineSegment2d exposing (LineSegment2d)
 import OpenSolid.LineSegment3d as LineSegment3d exposing (LineSegment3d)
-import OpenSolid.WebGL.Camera exposing (Camera)
-import OpenSolid.WebGL.Point3d as Point3d
 
 
 {-| Convert a line segment from 3D space to 2D screen (pixel) coordinates. The

@@ -1,4 +1,4 @@
-module OpenSolid.WebGL.Camera
+module OpenSolid.Camera
     exposing
         ( Camera
         , frame

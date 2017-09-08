@@ -1,4 +1,4 @@
-module OpenSolid.WebGL.Point3d exposing (toScreenSpace)
+module OpenSolid.Camera.Point3d exposing (toScreenSpace)
 
 {-|
 
@@ -6,10 +6,10 @@ module OpenSolid.WebGL.Point3d exposing (toScreenSpace)
 
 -}
 
+import OpenSolid.Camera as Camera exposing (Camera)
 import OpenSolid.Interop.LinearAlgebra.Point3d as Point3d
 import OpenSolid.Point2d as Point2d exposing (Point2d)
 import OpenSolid.Point3d as Point3d exposing (Point3d)
-import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 
 
 {-| Convert a point from 3D space to 2D screen (pixel) coordinates. The result

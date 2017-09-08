@@ -9,6 +9,7 @@ import Math.Matrix4 exposing (Mat4)
 import Math.Vector3 exposing (Vec3, vec3)
 import Mouse
 import OpenSolid.Axis3d as Axis3d exposing (Axis3d)
+import OpenSolid.Camera as Camera exposing (Camera)
 import OpenSolid.Direction2d as Direction2d exposing (Direction2d)
 import OpenSolid.Direction3d as Direction3d exposing (Direction3d)
 import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
@@ -20,7 +21,6 @@ import OpenSolid.Point3d as Point3d exposing (Point3d)
 import OpenSolid.SketchPlane3d as SketchPlane3d exposing (SketchPlane3d)
 import OpenSolid.Vector2d as Vector2d exposing (Vector2d)
 import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
-import OpenSolid.WebGL.Camera as Camera exposing (Camera)
 import SingleTouch
 import Task
 import Touch exposing (Touch, TouchEvent(..))

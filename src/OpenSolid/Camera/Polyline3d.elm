@@ -1,4 +1,4 @@
-module OpenSolid.WebGL.Polyline3d exposing (toScreenSpace)
+module OpenSolid.Camera.Polyline3d exposing (toScreenSpace)
 
 {-|
 
@@ -6,10 +6,10 @@ module OpenSolid.WebGL.Polyline3d exposing (toScreenSpace)
 
 -}
 
+import OpenSolid.Camera exposing (Camera)
+import OpenSolid.Camera.Point3d as Point3d
 import OpenSolid.Polyline2d as Polyline2d exposing (Polyline2d)
 import OpenSolid.Polyline3d as Polyline3d exposing (Polyline3d)
-import OpenSolid.WebGL.Camera exposing (Camera)
-import OpenSolid.WebGL.Point3d as Point3d
 
 
 {-| Convert a polyline from 3D space to 2D screen (pixel) coordinates. The
