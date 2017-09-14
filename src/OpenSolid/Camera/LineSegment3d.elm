@@ -22,7 +22,7 @@ toScreenSpace camera lineSegment =
         ( p1, p2 ) =
             LineSegment3d.endpoints lineSegment
     in
-    LineSegment2d.withEndpoints
+    LineSegment2d.fromEndpoints
         ( Point3d.toScreenSpace camera p1
         , Point3d.toScreenSpace camera p2
         )

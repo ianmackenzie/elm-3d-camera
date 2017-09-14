@@ -81,7 +81,7 @@ initialFrame =
 
 lightDirection : Direction3d
 lightDirection =
-    Vector3d.withComponents ( -1, -1, -2 )
+    Vector3d.fromComponents ( -1, -1, -2 )
         |> Vector3d.direction
         |> Maybe.withDefault Direction3d.negativeZ
 
@@ -100,7 +100,7 @@ accumulateVertices coordinates accumulated =
     case coordinates of
         x :: y :: z :: rest ->
             accumulateVertices rest
-                (Point3d.withCoordinates ( x, y, z ) :: accumulated)
+                (Point3d.fromCoordinates ( x, y, z ) :: accumulated)
 
         _ ->
             List.reverse accumulated
@@ -136,7 +136,7 @@ meshDecoder =
                     Frame3d.xyz
                         |> Frame3d.rotateAround Axis3d.x (degrees 90)
                         |> Frame3d.translateBy
-                            (Vector3d.withComponents ( 0, 0, -1 ))
+                            (Vector3d.fromComponents ( 0, 0, -1 ))
 
                 vertices =
                     accumulateVertices vertexData []
@@ -175,7 +175,7 @@ camera { width, height } =
     Camera.perspective
         { frame =
             Camera.lookAt
-                { eyePoint = Point3d.withCoordinates ( 15, 0, 0 )
+                { eyePoint = Point3d.fromCoordinates ( 15, 0, 0 )
                 , focalPoint = Point3d.origin
                 , upDirection = Direction3d.z
                 }
@@ -247,12 +247,12 @@ entity mesh placementFrame windowSize =
 
 mousePositionToPoint : Mouse.Position -> Point2d
 mousePositionToPoint mousePosition =
-    Point2d.withCoordinates ( toFloat mousePosition.x, toFloat mousePosition.y )
+    Point2d.fromCoordinates ( toFloat mousePosition.x, toFloat mousePosition.y )
 
 
 touchToPoint : Touch -> Point2d
 touchToPoint touch =
-    Point2d.withCoordinates ( touch.clientX, touch.clientY )
+    Point2d.fromCoordinates ( touch.clientX, touch.clientY )
 
 
 init : ( Model, Cmd Msg )
@@ -329,7 +329,7 @@ rotate : Frame3d -> Float -> Float -> Frame3d
 rotate frame dx dy =
     let
         dragVector =
-            Vector2d.withComponents ( dx, dy )
+            Vector2d.fromComponents ( dx, dy )
     in
     case Vector2d.direction dragVector of
         Just direction2d ->

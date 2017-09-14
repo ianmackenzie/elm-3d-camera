@@ -88,13 +88,13 @@ global up direction (which will typically be `Direction3d.positiveZ` or
 
     cameraFrame =
         Camera.lookAt
-            { eyePoint = Point3d.withCoordinates ( 10, 0, 5 )
+            { eyePoint = Point3d.fromCoordinates ( 10, 0, 5 )
             , focalPoint = Point3d.origin
             , upDirection = Direction3d.positiveZ
             }
 
     Frame3d.originPoint cameraFrame
-    --> Point3d.withCoordinates ( 10, 0, 5 )
+    --> Point3d.fromCoordinates ( 10, 0, 5 )
 
     Frame3d.xDirection cameraFrame
     --> Direction3d.positiveY

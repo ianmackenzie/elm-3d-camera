@@ -22,7 +22,7 @@ toScreenSpace camera triangle =
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
-    Triangle2d.withVertices
+    Triangle2d.fromVertices
         ( Point3d.toScreenSpace camera p1
         , Point3d.toScreenSpace camera p2
         , Point3d.toScreenSpace camera p3

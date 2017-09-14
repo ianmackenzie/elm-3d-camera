@@ -39,7 +39,7 @@ toScreenSpace camera point =
         halfHeight =
             0.5 * Camera.screenHeight camera
     in
-    Point2d.withCoordinates
+    Point2d.fromCoordinates
         ( halfWidth + halfWidth * ndcX
         , halfHeight + halfHeight * ndcY
         )
