@@ -17,12 +17,14 @@ result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
 toScreenSpace : Camera -> LineSegment3d -> LineSegment2d
-toScreenSpace camera lineSegment =
+toScreenSpace camera =
     let
-        ( p1, p2 ) =
-            LineSegment3d.endpoints lineSegment
+        project =
+            Point3d.toScreenSpace camera
     in
-    LineSegment2d.fromEndpoints
-        ( Point3d.toScreenSpace camera p1
-        , Point3d.toScreenSpace camera p2
-        )
+    \lineSegment ->
+        let
+            ( p1, p2 ) =
+                LineSegment3d.endpoints lineSegment
+        in
+        LineSegment2d.fromEndpoints ( project p1, project p2 )

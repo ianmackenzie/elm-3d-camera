@@ -17,7 +17,9 @@ result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
 toScreenSpace : Camera -> Polyline3d -> Polyline2d
-toScreenSpace camera polyline =
-    Polyline3d.vertices polyline
-        |> List.map (Point3d.toScreenSpace camera)
-        |> Polyline2d.fromVertices
+toScreenSpace camera =
+    let
+        project =
+            Point3d.toScreenSpace camera
+    in
+    Polyline3d.vertices >> List.map project >> Polyline2d.fromVertices

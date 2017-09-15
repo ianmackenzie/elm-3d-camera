@@ -17,13 +17,14 @@ result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
 toScreenSpace : Camera -> Triangle3d -> Triangle2d
-toScreenSpace camera triangle =
+toScreenSpace camera =
     let
-        ( p1, p2, p3 ) =
-            Triangle3d.vertices triangle
+        project =
+            Point3d.toScreenSpace camera
     in
-    Triangle2d.fromVertices
-        ( Point3d.toScreenSpace camera p1
-        , Point3d.toScreenSpace camera p2
-        , Point3d.toScreenSpace camera p3
-        )
+    \triangle ->
+        let
+            ( p1, p2, p3 ) =
+                Triangle3d.vertices triangle
+        in
+        Triangle2d.fromVertices ( project p1, project p2, project p3 )
