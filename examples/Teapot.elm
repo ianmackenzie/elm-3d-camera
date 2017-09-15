@@ -21,6 +21,7 @@ import OpenSolid.Point3d as Point3d exposing (Point3d)
 import OpenSolid.SketchPlane3d as SketchPlane3d exposing (SketchPlane3d)
 import OpenSolid.Vector2d as Vector2d exposing (Vector2d)
 import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
+import OpenSolid.Viewpoint as Viewpoint
 import SingleTouch
 import Task
 import Touch exposing (Touch, TouchEvent(..))
@@ -173,8 +174,8 @@ meshDecoder =
 camera : Window.Size -> Camera
 camera { width, height } =
     Camera.perspective
-        { frame =
-            Camera.lookAt
+        { viewpoint =
+            Viewpoint.lookAt
                 { eyePoint = Point3d.fromCoordinates ( 15, 0, 0 )
                 , focalPoint = Point3d.origin
                 , upDirection = Direction3d.z
