@@ -6,6 +6,7 @@ module OpenSolid.Viewpoint
         , modelViewMatrix
         , viewDirection
         , viewMatrix
+        , viewPlane
         , xDirection
         , yDirection
         )
@@ -20,15 +21,7 @@ Constructors
 
 Properties
 
-@docs eyePoint, viewDirection
-
-The X and Y directions of a viewpoint are the X and Y directions of the
-corresponding view plane (a plane perpendicular to the view direction). For an
-observer looking straight down the view direction, the X direction points to the
-right and the Y direction points up. (The Y direction will _not_ be equal to the
-global up direction unless the view direction is horizontal).
-
-@ docs xDirection, yDirection
+@docs eyePoint, viewDirection, viewPlane, xDirection, yDirection
 
 Matrices
 
@@ -41,6 +34,7 @@ import OpenSolid.Direction3d as Direction3d exposing (Direction3d)
 import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
 import OpenSolid.Interop.LinearAlgebra.Frame3d as Frame3d
 import OpenSolid.Point3d as Point3d exposing (Point3d)
+import OpenSolid.SketchPlane3d as SketchPlane3d exposing (SketchPlane3d)
 import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
 
 
@@ -165,14 +159,27 @@ viewDirection (Viewpoint frame) =
     Direction3d.flip (Frame3d.zDirection frame)
 
 
-{-| Get the X (right) direction of a viewpoint.
+{-| The view plane of a viewpoint is a `SketchPlane3d` perpendicular to the view
+direction, with origin point equal to the eye point. For an observer looking
+straight down the view direction, the X direction of the view plane points to
+the right and the Y direction points up; this means that the view plane's normal
+direction is the _opposite_ of the view direction. (Note that the Y direction
+will _not_ be equal to the global up direction unless the view direction is
+horizontal).
+-}
+viewPlane : Viewpoint -> SketchPlane3d
+viewPlane (Viewpoint frame) =
+    Frame3d.xySketchPlane frame
+
+
+{-| Get the X (right) direction of a viewpoint's view plane.
 -}
 xDirection : Viewpoint -> Direction3d
 xDirection (Viewpoint frame) =
     Frame3d.xDirection frame
 
 
-{-| Get the Y (local up) direction of a viewpoint.
+{-| Get the Y (local up) direction of a viewpoint's view plane.
 -}
 yDirection : Viewpoint -> Direction3d
 yDirection (Viewpoint frame) =
