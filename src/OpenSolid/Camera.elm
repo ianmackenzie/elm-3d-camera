@@ -48,6 +48,7 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 -}
 
+import Basics.Extra exposing (inDegrees)
 import Math.Matrix4 as Matrix4 exposing (Mat4)
 import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
 import OpenSolid.Viewpoint as Viewpoint exposing (Viewpoint)
@@ -88,7 +89,7 @@ perspective { viewpoint, screenWidth, screenHeight, verticalFieldOfView, nearCli
             screenWidth / screenHeight
 
         fovInDegrees =
-            verticalFieldOfView / degrees 1
+            verticalFieldOfView |> inDegrees
 
         projectionMatrix =
             Matrix4.makePerspective fovInDegrees aspectRatio nearClipDistance farClipDistance
