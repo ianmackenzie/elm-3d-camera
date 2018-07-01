@@ -1,6 +1,6 @@
-module OpenSolid.Viewpoint
+module Viewpoint3d
     exposing
-        ( Viewpoint
+        ( Viewpoint3d
         , eyePoint
         , lookAt
         , modelViewMatrix
@@ -11,68 +11,69 @@ module OpenSolid.Viewpoint
         , yDirection
         )
 
-{-|
+{-| A `Viewpoint3d` represents the position and orientation of a camera in 3D.
 
-@docs Viewpoint
+@docs Viewpoint3d
 
-Constructors
+
+# Constructors
 
 @docs lookAt
 
-Properties
+
+# Properties
 
 @docs eyePoint, viewDirection, viewPlane, xDirection, yDirection
 
-Matrices
+
+# Matrices
 
 @docs viewMatrix, modelViewMatrix
 
 -}
 
+import Direction3d exposing (Direction3d)
+import Frame3d exposing (Frame3d)
+import Geometry.Interop.LinearAlgebra.Frame3d as Frame3d
 import Math.Matrix4 exposing (Mat4)
-import OpenSolid.Direction3d as Direction3d exposing (Direction3d)
-import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
-import OpenSolid.Interop.LinearAlgebra.Frame3d as Frame3d
-import OpenSolid.Point3d as Point3d exposing (Point3d)
-import OpenSolid.SketchPlane3d as SketchPlane3d exposing (SketchPlane3d)
-import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
+import Point3d exposing (Point3d)
+import SketchPlane3d exposing (SketchPlane3d)
+import Vector3d exposing (Vector3d)
 
 
-{-| A `Viewpoint` represents the position and orientation of a camera in 3D.
--}
-type Viewpoint
-    = Viewpoint Frame3d
+{-| -}
+type Viewpoint3d
+    = Viewpoint3d Frame3d
 
 
-{-| Construct a `Viewpoint` at the given eye point looking towards the given
+{-| Construct a `Viewpoint3d` at the given eye point looking towards the given
 focal point, with the given global up direction (which will typically be
 `Direction3d.positiveZ` or `Direction3d.positiveY`). For example, to construct a
 viewpoint at the point (10, 0, 5) looking towards the origin:
 
     viewpoint =
-        Viewpoint.lookAt
-            { eyePoint = Point3d.fromCoordinates ( 10, 0, 5 )
+        Viewpoint3d.lookAt
+            { eyePoint =
+                Point3d.fromCoordinates ( 10, 0, 5 )
             , focalPoint = Point3d.origin
             , upDirection = Direction3d.positiveZ
             }
 
-    Viewpoint.eyePoint viewpoint
+    Viewpoint3d.eyePoint viewpoint
     --> Point3d.fromCoordinates ( 10, 0, 5 )
 
-    Viewpoint.xDirection viewpoint
+    Viewpoint3d.xDirection viewpoint
     --> Direction3d.positiveY
 
-    Viewpoint.yDirection viewpoint
-    --> Direction3d.with
-    -->     { azimuth = degrees 180
-    -->     , elevation = degrees 63.43
-    -->     }
+    Viewpoint3d.yDirection viewpoint
+    --> Direction3d.fromAzimuthAndElevation
+    -->     (degrees 180)
+    -->     (degrees 63.43)
 
-    Viewpoint.viewDirection viewpoint
-    --> Direction3d.with
-    -->     { azimuth = degrees 180
-    -->     , elevation = degrees -26.57
-    -->     }
+    Viewpoint3d.viewDirection viewpoint
+    --> Direction3d.fromAzimuthAndElevation
+    -->     (degrees 180)
+    -->     (degrees -26.57)
 
 That is likely all you need to know but if you are interested in the details and
 corner cases, read on!
@@ -92,7 +93,7 @@ to the global up direction and its X and view directions will be chosen
 arbitrarily.
 
 -}
-lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Viewpoint
+lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Viewpoint3d
 lookAt { focalPoint, eyePoint, upDirection } =
     let
         zVector =
@@ -104,9 +105,9 @@ lookAt { focalPoint, eyePoint, upDirection } =
         xVector =
             Vector3d.crossProduct yVector zVector
     in
-    case Direction3d.orthonormalize ( zVector, yVector, xVector ) of
+    case Direction3d.orthonormalize zVector yVector xVector of
         Just ( zDirection, yDirection, xDirection ) ->
-            Viewpoint <|
+            Viewpoint3d <|
                 Frame3d.unsafe
                     { originPoint = eyePoint
                     , xDirection = xDirection
@@ -122,11 +123,8 @@ lookAt { focalPoint, eyePoint, upDirection } =
                     -- resulted in a valid orthonormalization; therefore, choose
                     -- an arbitrary 'up' direction that is perpendicular to the
                     -- view direction
-                    Viewpoint <|
-                        Frame3d.with
-                            { originPoint = eyePoint
-                            , zDirection = zDirection
-                            }
+                    Viewpoint3d <|
+                        Frame3d.withZDirection zDirection eyePoint
 
                 Nothing ->
                     -- The view vector is zero (the eye point and focal point
@@ -136,7 +134,7 @@ lookAt { focalPoint, eyePoint, upDirection } =
                         ( zDirection, xDirection ) =
                             Direction3d.perpendicularBasis upDirection
                     in
-                    Viewpoint <|
+                    Viewpoint3d <|
                         Frame3d.unsafe
                             { originPoint = eyePoint
                             , xDirection = xDirection
@@ -147,16 +145,16 @@ lookAt { focalPoint, eyePoint, upDirection } =
 
 {-| Get the actual eye point of a viewpoint.
 -}
-eyePoint : Viewpoint -> Point3d
-eyePoint (Viewpoint frame) =
+eyePoint : Viewpoint3d -> Point3d
+eyePoint (Viewpoint3d frame) =
     Frame3d.originPoint frame
 
 
 {-| Get the viewing direction of a viewpoint.
 -}
-viewDirection : Viewpoint -> Direction3d
-viewDirection (Viewpoint frame) =
-    Direction3d.flip (Frame3d.zDirection frame)
+viewDirection : Viewpoint3d -> Direction3d
+viewDirection (Viewpoint3d frame) =
+    Direction3d.reverse (Frame3d.zDirection frame)
 
 
 {-| The view plane of a viewpoint is a `SketchPlane3d` perpendicular to the view
@@ -167,22 +165,22 @@ direction is the _opposite_ of the view direction. (Note that the Y direction
 will _not_ be equal to the global up direction unless the view direction is
 horizontal).
 -}
-viewPlane : Viewpoint -> SketchPlane3d
-viewPlane (Viewpoint frame) =
+viewPlane : Viewpoint3d -> SketchPlane3d
+viewPlane (Viewpoint3d frame) =
     Frame3d.xySketchPlane frame
 
 
 {-| Get the X (right) direction of a viewpoint's view plane.
 -}
-xDirection : Viewpoint -> Direction3d
-xDirection (Viewpoint frame) =
+xDirection : Viewpoint3d -> Direction3d
+xDirection (Viewpoint3d frame) =
     Frame3d.xDirection frame
 
 
 {-| Get the Y (local up) direction of a viewpoint's view plane.
 -}
-yDirection : Viewpoint -> Direction3d
-yDirection (Viewpoint frame) =
+yDirection : Viewpoint3d -> Direction3d
+yDirection (Viewpoint3d frame) =
     Frame3d.yDirection frame
 
 
@@ -190,26 +188,26 @@ yDirection (Viewpoint frame) =
 of a viewpoint. Multiplying by this matrix transforms from world coordinates to
 eye coordinates.
 -}
-viewMatrix : Viewpoint -> Mat4
-viewMatrix (Viewpoint frame) =
-    Frame3d.toMat4 (Frame3d.relativeTo frame Frame3d.xyz)
+viewMatrix : Viewpoint3d -> Mat4
+viewMatrix (Viewpoint3d frame) =
+    Frame3d.toMat4 (Frame3d.xyz |> Frame3d.relativeTo frame)
 
 
 {-| Construct a WebGL model-view matrix given a viewpoint and a `Frame3d` that
 defines the position and orientation of an object;
 
-    Viewpoint.modelViewMatrix viewpoint modelFrame
+    Viewpoint3d.modelViewMatrix modelFrame viewpoint
 
 is equivalent to
 
     Matrix4.mul
-        (Viewpoint.viewMatrix viewpoint)
+        (Viewpoint3d.viewMatrix viewpoint)
         (Frame3d.toMat4 modelFrame)
 
 Multiplying by this matrix transforms from object coordinates to eye
 coordinates.
 
 -}
-modelViewMatrix : Viewpoint -> Frame3d -> Mat4
-modelViewMatrix (Viewpoint frame) modelFrame =
-    Frame3d.toMat4 (Frame3d.relativeTo frame modelFrame)
+modelViewMatrix : Frame3d -> Viewpoint3d -> Mat4
+modelViewMatrix modelFrame (Viewpoint3d frame) =
+    Frame3d.toMat4 (modelFrame |> Frame3d.relativeTo frame)
