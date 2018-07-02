@@ -1,8 +1,8 @@
-## elm-3d-camera
+# elm-3d-camera
 
-This package provides convenient ways to define perspective and orthographic
-cameras in 3D. To define a camera, you first create a viewpoint which
-represents the position and orientation of the camera:
+This package provides convenient ways to define and useperspective and
+orthographic cameras in 3D. To define a camera, you first create a viewpoint
+which represents the position and orientation of the camera:
 
 ```elm
 cameraViewpoint =
