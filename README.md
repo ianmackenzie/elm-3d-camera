@@ -1,8 +1,14 @@
 # elm-3d-camera
 
-This package provides convenient ways to define and useperspective and
-orthographic cameras in 3D. To define a camera, you first create a viewpoint
-which represents the position and orientation of the camera:
+This package provides convenient ways to define and use perspective and
+orthographic cameras in 3D. It is intended to be a more intuitive alternative to
+directly constructing OpenGL model/view/projection matrices using
+[`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest),
+but also includes functionality for projecting from 3D to 2D space outside of
+of WebGL.
+
+To define a camera, you first create a viewpoint which represents the position
+and orientation of the camera:
 
 ```elm
 cameraViewpoint =
