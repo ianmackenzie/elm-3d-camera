@@ -2,7 +2,7 @@
 
 This package provides convenient ways to define and use perspective and
 orthographic cameras in 3D. It is intended to be a more intuitive alternative to
-directly constructing OpenGL model/view/projection matrices using
+directly constructing WebGL model/view/projection matrices using
 [`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest),
 but also includes functionality for projecting from 3D to 2D space outside of
 of WebGL.
@@ -47,7 +47,7 @@ orthographicCamera =
 
 ## WebGL rendering
 
-Once you have a camera, you can use it to get OpenGL model/view/projection
+Once you have a camera, you can use it to get WebGL model/view/projection
 matrices:
 
 ```elm
