@@ -4,6 +4,7 @@ This package provides convenient ways to define and use perspective and
 orthographic cameras in 3D. It is intended to be a more intuitive alternative to
 directly constructing WebGL model/view/projection matrices using
 [`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest),
+(especially if you are also using [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest))
 but also includes functionality for projecting from 3D to 2D space outside of
 of WebGL.
 
@@ -19,7 +20,7 @@ cameraViewpoint =
         }
 ```
 
-(The `Point3d` and `Direction3d` types are from [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest)).
+(The `Point3d` and `Direction3d` types are from `elm-geometry`).
 You can then create either a perspective or orthographic camera from the
 viewpoint:
 
