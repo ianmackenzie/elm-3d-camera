@@ -65,11 +65,14 @@ You can also use a `Camera3d` to project points, lines, triangles and polylines
 from 3D to 2D:
 
 ```elm
+import Point3d.Projection as Point3d
+import LineSegment3d.Projection as LineSegment3d
+
 point2d =
-    Camera.point2d camera point3d
+    point3d |> Point3d.toScreenSpace camera
 
 lineSegment2d =
-    Camera3d.lineSegment2d camera lineSegment3d
+    lineSegment3d |> LineSegment3d.toScreenSpace camera
 ```
 
 This allows you to, for example, do a perspective projection of 3D points and
