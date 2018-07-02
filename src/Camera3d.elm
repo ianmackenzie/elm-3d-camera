@@ -1,17 +1,13 @@
 module Camera3d
     exposing
         ( Camera3d
-        , lineSegment2d
         , modelViewMatrix
         , modelViewProjectionMatrix
         , orthographic
         , perspective
-        , point2d
-        , polyline2d
         , projectionMatrix
         , screenHeight
         , screenWidth
-        , triangle2d
         , viewMatrix
         , viewpoint
         )
@@ -53,59 +49,21 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 @docs viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
 
-
-# Projection
-
-@docs point2d, lineSegment2d, triangle2d, polyline2d
-
 -}
 
 import Basics.Extra exposing (inDegrees)
+import Camera3d.Types as Types
 import Frame3d exposing (Frame3d)
-import LineSegment2d exposing (LineSegment2d)
-import LineSegment3d exposing (LineSegment3d)
 import Math.Matrix4 exposing (Mat4)
-import Point2d exposing (Point2d)
-import Point3d exposing (Point3d)
-import Polyline2d exposing (Polyline2d)
-import Polyline3d exposing (Polyline3d)
-import Triangle2d exposing (Triangle2d)
-import Triangle3d exposing (Triangle3d)
 import Viewpoint3d exposing (Viewpoint3d)
 
 
-type alias Mat4Record =
-    { m11 : Float
-    , m12 : Float
-    , m13 : Float
-    , m14 : Float
-    , m21 : Float
-    , m22 : Float
-    , m23 : Float
-    , m24 : Float
-    , m31 : Float
-    , m32 : Float
-    , m33 : Float
-    , m34 : Float
-    , m41 : Float
-    , m42 : Float
-    , m43 : Float
-    , m44 : Float
-    }
-
-
 {-| -}
-type Camera3d
-    = Camera3d
-        { viewpoint : Viewpoint3d
-        , projectionMatrix : Mat4
-        , screenWidth : Float
-        , screenHeight : Float
-        , viewProjectionRecord : Mat4Record
-        }
+type alias Camera3d =
+    Types.Camera3d
 
 
-makeViewProjectionRecord : Viewpoint3d -> Mat4 -> Mat4Record
+makeViewProjectionRecord : Viewpoint3d -> Mat4 -> Types.Mat4Record
 makeViewProjectionRecord viewpoint projectionMatrix =
     let
         viewMatrix =
@@ -148,7 +106,7 @@ perspective { viewpoint, screenWidth, screenHeight, verticalFieldOfView, nearCli
                 nearClipDistance
                 farClipDistance
     in
-    Camera3d
+    Types.Camera3d
         { viewpoint = viewpoint
         , screenWidth = screenWidth
         , screenHeight = screenHeight
@@ -204,7 +162,7 @@ orthographic { viewpoint, screenWidth, screenHeight, viewportHeight, nearClipDis
                 nearClipDistance
                 farClipDistance
     in
-    Camera3d
+    Types.Camera3d
         { viewpoint = viewpoint
         , screenWidth = screenWidth
         , screenHeight = screenHeight
@@ -217,21 +175,21 @@ orthographic { viewpoint, screenWidth, screenHeight, viewportHeight, nearClipDis
 {-| Get the viewpoint defining the position and orientation of a camera.
 -}
 viewpoint : Camera3d -> Viewpoint3d
-viewpoint (Camera3d properties) =
+viewpoint (Types.Camera3d properties) =
     properties.viewpoint
 
 
 {-| Get the width of the screen rendered to by a camera.
 -}
 screenWidth : Camera3d -> Float
-screenWidth (Camera3d properties) =
+screenWidth (Types.Camera3d properties) =
     properties.screenWidth
 
 
 {-| Get the height of the screen rendered to by a camera.
 -}
 screenHeight : Camera3d -> Float
-screenHeight (Camera3d properties) =
+screenHeight (Types.Camera3d properties) =
     properties.screenHeight
 
 
@@ -272,7 +230,7 @@ of a camera. Multiplying by this matrix converts from eye coordinates to WebGL
 normalized device coordinates.
 -}
 projectionMatrix : Camera3d -> Mat4
-projectionMatrix (Camera3d properties) =
+projectionMatrix (Types.Camera3d properties) =
     properties.projectionMatrix
 
 
@@ -292,77 +250,3 @@ modelViewProjectionMatrix modelFrame camera =
     Math.Matrix4.mul
         (projectionMatrix camera)
         (modelViewMatrix modelFrame camera)
-
-
-viewProjectionRecord : Camera3d -> Mat4Record
-viewProjectionRecord (Camera3d properties) =
-    properties.viewProjectionRecord
-
-
-{-| Convert a point from 3D world space to 2D screen (pixel) coordinates. The
-result will be in a coordinate system where (0,0) is the bottom left of the
-screen.
--}
-point2d : Camera3d -> Point3d -> Point2d
-point2d (Camera3d camera) point =
-    let
-        { m11, m12, m13, m14, m21, m22, m23, m24, m41, m42, m43, m44 } =
-            camera.viewProjectionRecord
-
-        halfWidth =
-            0.5 * camera.screenWidth
-
-        halfHeight =
-            0.5 * camera.screenHeight
-
-        ( x, y, z ) =
-            Point3d.coordinates point
-
-        w =
-            m41 * x + m42 * y + m43 * z + m44
-
-        ndcX =
-            (m11 * x + m12 * y + m13 * z + m14) / w
-
-        ndcY =
-            (m21 * x + m22 * y + m23 * z + m24) / w
-    in
-    Point2d.fromCoordinates
-        ( halfWidth + halfWidth * ndcX
-        , halfHeight + halfHeight * ndcY
-        )
-
-
-{-| Convert a line segment from 3D space to 2D screen coordinates.
--}
-lineSegment2d : Camera3d -> LineSegment3d -> LineSegment2d
-lineSegment2d camera lineSegment =
-    let
-        ( p1, p2 ) =
-            LineSegment3d.endpoints lineSegment
-    in
-    LineSegment2d.fromEndpoints ( point2d camera p1, point2d camera p2 )
-
-
-{-| Convert a triangle from 3D space to 2D screen coordinates.
--}
-triangle2d : Camera3d -> Triangle3d -> Triangle2d
-triangle2d camera triangle =
-    let
-        ( p1, p2, p3 ) =
-            Triangle3d.vertices triangle
-    in
-    Triangle2d.fromVertices
-        ( point2d camera p1
-        , point2d camera p2
-        , point2d camera p3
-        )
-
-
-{-| Convert a polyline from 3D space to 2D screen coordinates.
--}
-polyline2d : Camera3d -> Polyline3d -> Polyline2d
-polyline2d camera polyline =
-    Polyline3d.vertices polyline
-        |> List.map (point2d camera)
-        |> Polyline2d.fromVertices

@@ -10,9 +10,11 @@ import Html exposing (Html)
 import Html.Attributes as Attributes
 import Kintail.InputWidget as InputWidget
 import LineSegment3d
+import LineSegment3d.Projection as LineSegment3d
 import Logo
 import Point2d
 import Point3d
+import Point3d.Projection as Point3d
 import Svg exposing (Svg)
 import Svg.Attributes
 import Viewpoint3d
@@ -93,7 +95,7 @@ view { angleInDegrees, projectionType } =
         vertices2d =
             Logo.vertices
                 |> List.map (Point3d.rotateAround Axis3d.z angle)
-                |> List.map (Camera3d.point2d camera)
+                |> List.map (Point3d.toScreenSpace camera)
 
         svgCircles =
             vertices2d
@@ -110,7 +112,7 @@ view { angleInDegrees, projectionType } =
         svgLines =
             Logo.edges
                 |> List.map (LineSegment3d.rotateAround Axis3d.z angle)
-                |> List.map (Camera3d.lineSegment2d camera)
+                |> List.map (LineSegment3d.toScreenSpace camera)
                 |> List.map
                     (\edge ->
                         Svg.lineSegment2d
