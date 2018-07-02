@@ -1,12 +1,16 @@
 # elm-3d-camera
 
-This package provides convenient ways to define and use perspective and
-orthographic cameras in 3D. It is intended to be a more intuitive alternative to
-directly constructing WebGL model/view/projection matrices using
-[`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest),
-(especially if you are also using [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest))
-but also includes functionality for projecting from 3D to 2D space outside of
-of WebGL.
+This package is provides convenient ways to define and use perspective and
+orthographic cameras in 3D. It is based on [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest)
+and has two main goals:
+
+  - Provide a way to construct WebGL model/view/projection matrices that is more
+    intuitive than using [`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest)
+    directly
+  - Provide standalone 3D-to-2D projection functionality that can be used
+    outside of WebGL
+
+## Defining cameras
 
 To define a camera, you first create a viewpoint which represents the position
 and orientation of the camera:
@@ -20,7 +24,6 @@ cameraViewpoint =
         }
 ```
 
-(The `Point3d` and `Direction3d` types are from `elm-geometry`).
 You can then create either a perspective or orthographic camera from the
 viewpoint:
 
@@ -83,7 +86,9 @@ lineSegment2d =
 ```
 
 This allows you to, for example, do a perspective projection of 3D points and
-line segments into 2D so that those points and lines can be rendered with SVG:
+lines into 2D so that those points and lines can be rendered with SVG (taking
+advantage of SVG features like perfect circles and dashed lines which are
+difficult to do with WebGL):
 
 ![Perspective projection](https://ianmackenzie.github.io/elm-3d-camera/1.0.0/projection.png)
 
@@ -92,7 +97,7 @@ line segments into 2D so that those points and lines can be rendered with SVG:
 Several more features are planned:
 
   - More `Viewpoint3d` constructors other than just `lookAt`
-  - More 3D-to-2D projections (vectors, directions, axes)
+  - More 3D-to-2D projections (directions, axes)
   - Construction of 3D pick rays and cut planes from 2D screen points and lines
 
 ## Questions? Comments?
@@ -102,7 +107,7 @@ run into a bug, if any documentation is missing/incorrect/confusing, or if
 there's a new feature that you would find useful. For general questions about
 using `elm-3d-camera`, try:
 
-  - Joining the **#webgl** or **#geometry** channels on the [Elm Slack](http://elmlang.herokuapp.com/),
+  - Joining the **#geometry** or **#webgl** channels on the [Elm Slack](http://elmlang.herokuapp.com/),
     or sending me (**@ianmackenzie**) a message - even if you don't have any
     particular questions right now, it would be great to know what you're hoping
     to do with the package!
