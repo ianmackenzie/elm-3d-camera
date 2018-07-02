@@ -86,6 +86,14 @@ line segments into 2D so that those points and lines can be rendered with SVG:
 
 ![Perspective projection](https://ianmackenzie.github.io/elm-3d-camera/1.0.0/projection.png)
 
+## Roadmap
+
+Several more features are planned:
+
+  - More `Viewpoint3d` constructors other than just `lookAt`
+  - More 3D-to-2D projections (vectors, directions, axes)
+  - Construction of 3D pick rays and cut planes from 2D screen points and lines
+
 ## Questions? Comments?
 
 Please [open a new issue](https://github.com/ianmackenzie/elm-3d-camera/issues) if you
