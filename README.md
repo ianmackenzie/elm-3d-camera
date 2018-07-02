@@ -76,7 +76,7 @@ lineSegment2d =
 ```
 
 This allows you to, for example, do a perspective projection of 3D points and
-line segments into 2D so that those lines can be rendered with SVG:
+line segments into 2D so that those points and lines can be rendered with SVG:
 
 ![Perspective projection](https://ianmackenzie.github.io/elm-3d-camera/1.0.0/projection.png)
 
