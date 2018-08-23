@@ -51,7 +51,6 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 -}
 
-import Basics.Extra exposing (inDegrees)
 import Camera3d.Types as Types
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
@@ -64,13 +63,11 @@ type alias Camera3d =
 
 
 makeViewProjectionRecord : Viewpoint3d -> Mat4 -> Types.Mat4Record
-makeViewProjectionRecord viewpoint projectionMatrix =
+makeViewProjectionRecord givenViewpoint givenProjectionMatrix =
     let
-        viewMatrix =
-            Viewpoint3d.viewMatrix viewpoint
-
         viewProjectionMatrix =
-            Math.Matrix4.mul projectionMatrix viewMatrix
+            Math.Matrix4.mul givenProjectionMatrix
+                (Viewpoint3d.viewMatrix givenViewpoint)
     in
     Math.Matrix4.toRecord viewProjectionMatrix
 
@@ -91,28 +88,30 @@ match the aspect ratio of the screen given by `screenWidth` and `screenHeight`.
 
 -}
 perspective : { viewpoint : Viewpoint3d, screenWidth : Float, screenHeight : Float, verticalFieldOfView : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera3d
-perspective { viewpoint, screenWidth, screenHeight, verticalFieldOfView, nearClipDistance, farClipDistance } =
+perspective arguments =
     let
         aspectRatio =
-            screenWidth / screenHeight
+            arguments.screenWidth / arguments.screenHeight
 
         fovInDegrees =
-            verticalFieldOfView |> inDegrees
+            arguments.verticalFieldOfView / degrees 1
 
-        projectionMatrix =
+        perspectiveProjectionMatrix =
             Math.Matrix4.makePerspective
                 fovInDegrees
                 aspectRatio
-                nearClipDistance
-                farClipDistance
+                arguments.nearClipDistance
+                arguments.farClipDistance
     in
     Types.Camera3d
-        { viewpoint = viewpoint
-        , screenWidth = screenWidth
-        , screenHeight = screenHeight
-        , projectionMatrix = projectionMatrix
+        { viewpoint = arguments.viewpoint
+        , screenWidth = arguments.screenWidth
+        , screenHeight = arguments.screenHeight
+        , projectionMatrix = perspectiveProjectionMatrix
         , viewProjectionRecord =
-            makeViewProjectionRecord viewpoint projectionMatrix
+            makeViewProjectionRecord
+                arguments.viewpoint
+                perspectiveProjectionMatrix
         }
 
 
@@ -133,13 +132,13 @@ aspect ratio of the screen given by `screenWidth` and `screenHeight`.)
 
 -}
 orthographic : { viewpoint : Viewpoint3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera3d
-orthographic { viewpoint, screenWidth, screenHeight, viewportHeight, nearClipDistance, farClipDistance } =
+orthographic arguments =
     let
         aspectRatio =
-            screenWidth / screenHeight
+            arguments.screenWidth / arguments.screenHeight
 
         viewportWidth =
-            aspectRatio * viewportHeight
+            aspectRatio * arguments.viewportHeight
 
         left =
             -viewportWidth / 2
@@ -148,27 +147,29 @@ orthographic { viewpoint, screenWidth, screenHeight, viewportHeight, nearClipDis
             viewportWidth / 2
 
         bottom =
-            -viewportHeight / 2
+            -arguments.viewportHeight / 2
 
         top =
-            viewportHeight / 2
+            arguments.viewportHeight / 2
 
-        projectionMatrix =
+        orthographicProjectionMatrix =
             Math.Matrix4.makeOrtho
                 left
                 right
                 bottom
                 top
-                nearClipDistance
-                farClipDistance
+                arguments.nearClipDistance
+                arguments.farClipDistance
     in
     Types.Camera3d
-        { viewpoint = viewpoint
-        , screenWidth = screenWidth
-        , screenHeight = screenHeight
-        , projectionMatrix = projectionMatrix
+        { viewpoint = arguments.viewpoint
+        , screenWidth = arguments.screenWidth
+        , screenHeight = arguments.screenHeight
+        , projectionMatrix = orthographicProjectionMatrix
         , viewProjectionRecord =
-            makeViewProjectionRecord viewpoint projectionMatrix
+            makeViewProjectionRecord
+                arguments.viewpoint
+                orthographicProjectionMatrix
         }
 
 

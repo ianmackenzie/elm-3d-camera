@@ -95,25 +95,25 @@ arbitrarily.
 
 -}
 lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Viewpoint3d
-lookAt { focalPoint, eyePoint, upDirection } =
+lookAt arguments =
     let
         zVector =
-            Vector3d.from focalPoint eyePoint
+            Vector3d.from arguments.focalPoint arguments.eyePoint
 
         yVector =
-            Direction3d.toVector upDirection
+            Direction3d.toVector arguments.upDirection
 
         xVector =
             Vector3d.crossProduct yVector zVector
     in
     case Direction3d.orthonormalize zVector yVector xVector of
-        Just ( zDirection, yDirection, xDirection ) ->
+        Just ( normalizedZDirection, normalizedYDirection, normalizedXDirection ) ->
             Types.Viewpoint3d <|
                 Frame3d.unsafe
-                    { originPoint = eyePoint
-                    , xDirection = xDirection
-                    , yDirection = yDirection
-                    , zDirection = zDirection
+                    { originPoint = arguments.eyePoint
+                    , xDirection = normalizedXDirection
+                    , yDirection = normalizedYDirection
+                    , zDirection = normalizedZDirection
                     }
 
         Nothing ->
@@ -125,22 +125,22 @@ lookAt { focalPoint, eyePoint, upDirection } =
                     -- an arbitrary 'up' direction that is perpendicular to the
                     -- view direction
                     Types.Viewpoint3d <|
-                        Frame3d.withZDirection zDirection eyePoint
+                        Frame3d.withZDirection zDirection arguments.eyePoint
 
                 Nothing ->
                     -- The view vector is zero (the eye point and focal point
                     -- are coincident), so construct an arbitrary frame with the
                     -- given up direction
                     let
-                        ( zDirection, xDirection ) =
-                            Direction3d.perpendicularBasis upDirection
+                        ( arbitraryZDirection, arbitraryXDirection ) =
+                            Direction3d.perpendicularBasis arguments.upDirection
                     in
                     Types.Viewpoint3d <|
                         Frame3d.unsafe
-                            { originPoint = eyePoint
-                            , xDirection = xDirection
-                            , yDirection = upDirection
-                            , zDirection = zDirection
+                            { originPoint = arguments.eyePoint
+                            , xDirection = arbitraryXDirection
+                            , yDirection = arguments.upDirection
+                            , zDirection = arbitraryZDirection
                             }
 
 
