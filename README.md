@@ -5,7 +5,7 @@ orthographic cameras in 3D. It is based on [`elm-geometry`](http://package.elm-l
 and has two main goals:
 
   - Provide a way to construct WebGL model/view/projection matrices that is more
-    intuitive than using [`elm-community/linear-algebra`](http://package.elm-lang.org/packages/elm-community/linear-algebra/latest)
+    intuitive than using [`elm-explorations/linear-algebra`](http://package.elm-lang.org/packages/elm-explorations/linear-algebra/latest)
     directly
   - Provide standalone 3D-to-2D projection functionality that can be used
     outside of WebGL
