@@ -1,4 +1,4 @@
-module Teapot exposing (..)
+module Teapot exposing (main)
 
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
@@ -27,6 +27,7 @@ import Task
 import Touch exposing (Touch, TouchEvent(..))
 import WebGL exposing (Mesh)
 import Window
+
 
 
 -- Types
