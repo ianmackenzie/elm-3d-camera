@@ -76,7 +76,7 @@ type alias Varyings =
 
 initialFrame : Frame3d
 initialFrame =
-    Frame3d.xyz
+    Frame3d.atOrigin
         |> Frame3d.rotateAround Axis3d.z (degrees -30)
         |> Frame3d.rotateAround Axis3d.y (degrees 20)
 
@@ -135,7 +135,7 @@ meshDecoder =
         (\vertexData normalData faceData ->
             let
                 frame =
-                    Frame3d.xyz
+                    Frame3d.atOrigin
                         |> Frame3d.rotateAround Axis3d.x (degrees 90)
                         |> Frame3d.translateBy
                             (Vector3d.fromComponents ( 0, 0, -1 ))

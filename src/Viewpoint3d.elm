@@ -191,7 +191,7 @@ eye coordinates.
 -}
 viewMatrix : Viewpoint3d -> Mat4
 viewMatrix (Types.Viewpoint3d frame) =
-    Frame3d.toMat4 (Frame3d.xyz |> Frame3d.relativeTo frame)
+    Frame3d.toMat4 (Frame3d.atOrigin |> Frame3d.relativeTo frame)
 
 
 {-| Construct a WebGL model-view matrix given a viewpoint and a `Frame3d` that
