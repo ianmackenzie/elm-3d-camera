@@ -1,15 +1,9 @@
-module Viewpoint3d
-    exposing
-        ( Viewpoint3d
-        , eyePoint
-        , lookAt
-        , modelViewMatrix
-        , viewDirection
-        , viewMatrix
-        , viewPlane
-        , xDirection
-        , yDirection
-        )
+module Viewpoint3d exposing
+    ( Viewpoint3d
+    , lookAt
+    , eyePoint, viewDirection, viewPlane, xDirection, yDirection
+    , viewMatrix, modelViewMatrix
+    )
 
 {-| A `Viewpoint3d` represents the position and orientation of a camera in 3D.
 
