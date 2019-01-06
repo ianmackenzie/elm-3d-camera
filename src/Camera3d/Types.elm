@@ -1,4 +1,4 @@
-module Camera3d.Types exposing (..)
+module Camera3d.Types exposing (Camera3d(..), Mat4Record, Viewpoint3d(..))
 
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)

@@ -1,16 +1,9 @@
-module Camera3d
-    exposing
-        ( Camera3d
-        , modelViewMatrix
-        , modelViewProjectionMatrix
-        , orthographic
-        , perspective
-        , projectionMatrix
-        , screenHeight
-        , screenWidth
-        , viewMatrix
-        , viewpoint
-        )
+module Camera3d exposing
+    ( Camera3d
+    , perspective, orthographic
+    , viewpoint, screenWidth, screenHeight
+    , viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
+    )
 
 {-| A `Camera3d` is a perspective or orthographic camera in 3D, encapsulating
 the camera's viewpoint and projection matrix as well as the dimensions of the
