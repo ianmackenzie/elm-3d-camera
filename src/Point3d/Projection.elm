@@ -17,7 +17,7 @@ result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
 toScreenSpace : Camera3d -> Point3d -> Point2d
-toScreenSpace (Types.Camera3d camera) point =
+toScreenSpace (Types.Camera3d camera _) point =
     let
         { m11, m12, m13, m14, m21, m22, m23, m24, m41, m42, m43, m44 } =
             camera.viewProjectionRecord

@@ -1,4 +1,10 @@
-module Camera3d.Types exposing (Camera3d(..), Mat4Record, Viewpoint3d(..))
+module Camera3d.Types exposing
+    ( Camera3d(..)
+    , Mat4Record
+    , Projection(..)
+    , Properties
+    , Viewpoint3d(..)
+    )
 
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
@@ -28,11 +34,19 @@ type alias Mat4Record =
     }
 
 
+type alias Properties =
+    { viewpoint : Viewpoint3d
+    , projectionMatrix : Mat4
+    , screenWidth : Float
+    , screenHeight : Float
+    , viewProjectionRecord : Mat4Record
+    }
+
+
+type Projection
+    = Perspective { screenDistance : Float }
+    | Orthographic { pixelsPerUnit : Float }
+
+
 type Camera3d
-    = Camera3d
-        { viewpoint : Viewpoint3d
-        , projectionMatrix : Mat4
-        , screenWidth : Float
-        , screenHeight : Float
-        , viewProjectionRecord : Mat4Record
-        }
+    = Camera3d Properties Projection

@@ -95,6 +95,10 @@ perspective arguments =
                 aspectRatio
                 arguments.nearClipDistance
                 arguments.farClipDistance
+
+        screenDistance =
+            arguments.screenHeight
+                / (2 * tan (arguments.verticalFieldOfView / 2))
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
@@ -106,6 +110,7 @@ perspective arguments =
                 arguments.viewpoint
                 perspectiveProjectionMatrix
         }
+        (Types.Perspective { screenDistance = screenDistance })
 
 
 {-| Create an orthographic camera with the common camera properties plus the
@@ -153,6 +158,9 @@ orthographic arguments =
                 top
                 arguments.nearClipDistance
                 arguments.farClipDistance
+
+        pixelsPerUnit =
+            arguments.screenHeight / arguments.viewportHeight
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
@@ -164,26 +172,27 @@ orthographic arguments =
                 arguments.viewpoint
                 orthographicProjectionMatrix
         }
+        (Types.Orthographic { pixelsPerUnit = pixelsPerUnit })
 
 
 {-| Get the viewpoint defining the position and orientation of a camera.
 -}
 viewpoint : Camera3d -> Viewpoint3d
-viewpoint (Types.Camera3d properties) =
+viewpoint (Types.Camera3d properties _) =
     properties.viewpoint
 
 
 {-| Get the width of the screen rendered to by a camera.
 -}
 screenWidth : Camera3d -> Float
-screenWidth (Types.Camera3d properties) =
+screenWidth (Types.Camera3d properties _) =
     properties.screenWidth
 
 
 {-| Get the height of the screen rendered to by a camera.
 -}
 screenHeight : Camera3d -> Float
-screenHeight (Types.Camera3d properties) =
+screenHeight (Types.Camera3d properties _) =
     properties.screenHeight
 
 
@@ -224,7 +233,7 @@ of a camera. Multiplying by this matrix converts from eye coordinates to WebGL
 normalized device coordinates.
 -}
 projectionMatrix : Camera3d -> Mat4
-projectionMatrix (Types.Camera3d properties) =
+projectionMatrix (Types.Camera3d properties _) =
     properties.projectionMatrix
 
 
