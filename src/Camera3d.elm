@@ -2,6 +2,7 @@ module Camera3d exposing
     ( Camera3d
     , perspective, orthographic
     , viewpoint, screenWidth, screenHeight
+    , ray
     , viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
     )
 
@@ -38,15 +39,25 @@ Cameras have some commmon properties regardless of how they are constructed:
 @docs viewpoint, screenWidth, screenHeight
 
 
+# Ray casting
+
+@docs ray
+
+
 # Matrices
 
 @docs viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
 
 -}
 
+import Axis3d exposing (Axis3d)
 import Camera3d.Types as Types
+import Direction3d exposing (Direction3d)
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
+import Point2d exposing (Point2d)
+import Point3d exposing (Point3d)
+import Vector3d exposing (Vector3d)
 import Viewpoint3d exposing (Viewpoint3d)
 
 
@@ -194,6 +205,52 @@ screenWidth (Types.Camera3d properties _) =
 screenHeight : Camera3d -> Float
 screenHeight (Types.Camera3d properties _) =
     properties.screenHeight
+
+
+{-| Given a camera and a 2D screen point, calculate the corresponding 3D ray as
+an `Axis3d`. Conceptually, the ray will pass through the given point on the
+screen and will have direction equal to the viewing direction at that point.
+
+For a perspective camera, the origin of the ray will be constant (always equal
+to the camera's eye point) and the direction will vary depending on the 2D
+screen point. For an orthographic camera, the direction of the ray will be
+constant (the view direction of the camera) but the origin will vary depending
+on the 2D screen point.
+
+-}
+ray : Camera3d -> Point2d -> Axis3d
+ray (Types.Camera3d properties projection) screenPoint =
+    let
+        (Types.Viewpoint3d viewpointFrame) =
+            properties.viewpoint
+
+        ( x, y ) =
+            Point2d.coordinates screenPoint
+
+        viewDirection =
+            Direction3d.reverse (Frame3d.zDirection viewpointFrame)
+    in
+    case projection of
+        Types.Perspective { screenDistance } ->
+            let
+                origin =
+                    Frame3d.originPoint viewpointFrame
+
+                direction =
+                    Vector3d.fromComponents ( x, y, -screenDistance )
+                        |> Vector3d.placeIn viewpointFrame
+                        |> Vector3d.direction
+                        |> Maybe.withDefault viewDirection
+            in
+            Axis3d.through origin direction
+
+        Types.Orthographic { pixelsPerUnit } ->
+            let
+                origin =
+                    Point3d.fromCoordinatesIn viewpointFrame
+                        ( x / pixelsPerUnit, y / pixelsPerUnit, 0 )
+            in
+            Axis3d.through origin viewDirection
 
 
 {-| Get the [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
