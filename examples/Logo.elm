@@ -1,8 +1,26 @@
-module Logo exposing (edges, vertices)
+module Logo exposing (edges, logoUnits, vertices)
 
 import Frame3d exposing (Frame3d)
 import LineSegment3d exposing (LineSegment3d)
 import Point3d exposing (Point3d)
+import Quantity exposing (Quantity(..))
+
+
+type LogoUnits
+    = LogoUnits
+
+
+type Corner
+    = Corner
+
+
+type Center
+    = Center
+
+
+logoUnits : Float -> Quantity Float LogoUnits
+logoUnits value =
+    Quantity value
 
 
 height : Float
@@ -25,68 +43,68 @@ zOffset =
     0.6
 
 
-p0 : Point3d
+p0 : Point3d LogoUnits Corner
 p0 =
     Point3d.origin
 
 
-p1 : Point3d
+p1 : Point3d LogoUnits Corner
 p1 =
-    Point3d.fromCoordinates ( 1, 0, 0 )
+    Point3d.fromTuple logoUnits ( 1, 0, 0 )
 
 
-p2 : Point3d
+p2 : Point3d LogoUnits Corner
 p2 =
-    Point3d.fromCoordinates ( 1, 1, 0 )
+    Point3d.fromTuple logoUnits ( 1, 1, 0 )
 
 
-p3 : Point3d
+p3 : Point3d LogoUnits Corner
 p3 =
-    Point3d.fromCoordinates ( 0, 1, 0 )
+    Point3d.fromTuple logoUnits ( 0, 1, 0 )
 
 
-p4 : Point3d
+p4 : Point3d LogoUnits Corner
 p4 =
-    Point3d.fromCoordinates ( 0, 1, height )
+    Point3d.fromTuple logoUnits ( 0, 1, height )
 
 
-p5 : Point3d
+p5 : Point3d LogoUnits Corner
 p5 =
-    Point3d.fromCoordinates ( 0, 0, height )
+    Point3d.fromTuple logoUnits ( 0, 0, height )
 
 
-p6 : Point3d
+p6 : Point3d LogoUnits Corner
 p6 =
-    Point3d.fromCoordinates ( 1, 0, height )
+    Point3d.fromTuple logoUnits ( 1, 0, height )
 
 
-p7 : Point3d
+p7 : Point3d LogoUnits Corner
 p7 =
-    Point3d.fromCoordinates ( 1, 1 - yOffset, height )
+    Point3d.fromTuple logoUnits ( 1, 1 - yOffset, height )
 
 
-p8 : Point3d
+p8 : Point3d LogoUnits Corner
 p8 =
-    Point3d.fromCoordinates ( 1, 1, height - zOffset )
+    Point3d.fromTuple logoUnits ( 1, 1, height - zOffset )
 
 
-p9 : Point3d
+p9 : Point3d LogoUnits Corner
 p9 =
-    Point3d.fromCoordinates ( 1 - xOffset, 1, height )
+    Point3d.fromTuple logoUnits ( 1 - xOffset, 1, height )
 
 
-centerFrame : Frame3d
+centerFrame : Frame3d LogoUnits Corner { defines : Center }
 centerFrame =
-    Frame3d.atPoint (Point3d.fromCoordinates ( 0.5, 0.5, height / 2 ))
+    Frame3d.atPoint (Point3d.fromTuple logoUnits ( 0.5, 0.5, height / 2 ))
 
 
-vertices : List Point3d
+vertices : List (Point3d LogoUnits Center)
 vertices =
     [ p0, p1, p2, p3, p4, p5, p6, p7, p8, p9 ]
         |> List.map (Point3d.relativeTo centerFrame)
 
 
-edges : List LineSegment3d
+edges : List (LineSegment3d LogoUnits Center)
 edges =
     [ LineSegment3d.from p0 p1
     , LineSegment3d.from p1 p2

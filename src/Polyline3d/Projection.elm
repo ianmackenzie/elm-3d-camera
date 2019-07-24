@@ -16,7 +16,10 @@ import Polyline3d exposing (Polyline3d)
 result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
-toScreenSpace : Camera3d -> Polyline3d -> Polyline2d
+toScreenSpace :
+    Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> Polyline3d worldUnits worldCoordinates
+    -> Polyline2d screenUnits screenCoordinates
 toScreenSpace camera polyline =
     Polyline3d.vertices polyline
         |> List.map (Point3d.toScreenSpace camera)

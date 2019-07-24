@@ -1,22 +1,30 @@
-module Overlay exposing (..)
+module Overlay exposing (Model, Msg(..), ProjectionType(..), main, update, view)
 
+import Angle
 import Axis3d
+import Browser
 import Camera3d
 import Circle2d
+import Color
 import Direction3d
+import Drawing2d
+import Drawing2d.Attributes as Attributes
+import Element
+import Element.Border
+import Element.Input
 import Frame2d
-import Geometry.Svg as Svg
 import Html exposing (Html)
 import Html.Attributes as Attributes
-import Kintail.InputWidget as InputWidget
+import Length exposing (meters)
 import LineSegment3d
 import LineSegment3d.Projection as LineSegment3d
-import Logo
+import Logo exposing (logoUnits)
+import Pixels exposing (inPixels, pixels)
 import Point2d
 import Point3d
 import Point3d.Projection as Point3d
-import Svg exposing (Svg)
-import Svg.Attributes
+import Quantity exposing (zero)
+import Rectangle2d
 import Viewpoint3d
 
 
@@ -36,6 +44,16 @@ type alias Model =
     }
 
 
+projectionTypeString : ProjectionType -> String
+projectionTypeString projectionType =
+    case projectionType of
+        Perspective ->
+            "Perspective"
+
+        Orthographic ->
+            "Orthographic"
+
+
 update : Msg -> Model -> Model
 update message model =
     case message of
@@ -50,15 +68,23 @@ view : Model -> Html Msg
 view { angleInDegrees, projectionType } =
     let
         width =
-            800
+            pixels 800
 
         height =
-            600
+            pixels 600
+
+        screen =
+            Rectangle2d.fromExtrema
+                { minX = zero
+                , minY = zero
+                , maxX = width
+                , maxY = height
+                }
 
         eyePoint =
-            Point3d.fromCoordinates ( 4, 0, 0 )
-                |> Point3d.rotateAround Axis3d.y (degrees -22.5)
-                |> Point3d.rotateAround Axis3d.z (degrees 60)
+            Point3d.xyz (logoUnits 4) zero zero
+                |> Point3d.rotateAround Axis3d.y (Angle.degrees -22.5)
+                |> Point3d.rotateAround Axis3d.z (Angle.degrees 60)
 
         viewpoint =
             Viewpoint3d.lookAt
@@ -72,113 +98,114 @@ view { angleInDegrees, projectionType } =
                 Perspective ->
                     Camera3d.perspective
                         { viewpoint = viewpoint
-                        , screenWidth = toFloat width
-                        , screenHeight = toFloat height
-                        , verticalFieldOfView = degrees 30
-                        , nearClipDistance = 0.1
-                        , farClipDistance = 100
+                        , screen = screen
+                        , verticalFieldOfView = Angle.degrees 30
+                        , nearClipDistance = logoUnits 0.1
+                        , farClipDistance = logoUnits 100
                         }
 
                 Orthographic ->
                     Camera3d.orthographic
                         { viewpoint = viewpoint
-                        , screenWidth = toFloat width
-                        , screenHeight = toFloat height
-                        , viewportHeight = 2
-                        , nearClipDistance = 0.1
-                        , farClipDistance = 100
+                        , screen = screen
+                        , viewportHeight = logoUnits 2
+                        , nearClipDistance = logoUnits 0.1
+                        , farClipDistance = logoUnits 100
                         }
 
         angle =
-            degrees angleInDegrees
+            Angle.degrees angleInDegrees
 
         vertices2d =
             Logo.vertices
                 |> List.map (Point3d.rotateAround Axis3d.z angle)
                 |> List.map (Point3d.toScreenSpace camera)
 
-        svgCircles =
+        drawingCircles =
             vertices2d
                 |> List.map
                     (\vertex ->
-                        Svg.circle2d
-                            [ Svg.Attributes.stroke "grey"
-                            , Svg.Attributes.strokeWidth "2"
-                            , Svg.Attributes.fill "none"
+                        Drawing2d.circle
+                            [ Attributes.strokeColor Color.grey
+                            , Attributes.strokeWidth (pixels 2)
+                            , Attributes.noFill
                             ]
-                            (Circle2d.withRadius 7 vertex)
+                            (Circle2d.withRadius (pixels 7) vertex)
                     )
 
-        svgLines =
+        drawingLines =
             Logo.edges
                 |> List.map (LineSegment3d.rotateAround Axis3d.z angle)
                 |> List.map (LineSegment3d.toScreenSpace camera)
                 |> List.map
                     (\edge ->
-                        Svg.lineSegment2d
-                            [ Svg.Attributes.stroke "grey"
-                            , Svg.Attributes.strokeWidth "2"
-                            , Svg.Attributes.strokeDasharray "5 5"
+                        Drawing2d.lineSegment
+                            [ Attributes.strokeColor Color.grey
+                            , Attributes.strokeWidth (pixels 1)
+
+                            --, Attributes.strokeDasharray "5 5"
                             ]
                             edge
                     )
 
         topLeftFrame =
-            Frame2d.atPoint (Point2d.fromCoordinates ( 0, height ))
+            Frame2d.atPoint (Point2d.xy zero height)
                 |> Frame2d.reverseY
 
-        svgElement =
-            Svg.svg
-                [ Attributes.width width, Attributes.height height ]
-                [ Svg.relativeTo topLeftFrame
-                    (Svg.g [] (svgCircles ++ svgLines))
-                ]
-
-        sliderAttributes =
-            [ Attributes.style [ ( "width", toString width ++ "px" ) ] ]
-
-        sliderConfig =
-            { min = 0
-            , max = 360
-            , step = 1
-            }
+        drawingElement =
+            Drawing2d.toHtml (Rectangle2d.boundingBox screen)
+                []
+                (drawingLines ++ drawingCircles)
 
         slider =
-            Html.div []
-                [ InputWidget.slider sliderAttributes
-                    sliderConfig
-                    angleInDegrees
-                    |> Html.map SetAngleInDegrees
-                ]
+            Element.el [ Element.paddingXY 0 6 ] <|
+                Element.Input.slider
+                    [ Element.width (Element.px (round (inPixels width)))
+                    , Element.Border.width 1
+                    , Element.height (Element.px 6)
+                    , Element.Border.rounded 4
+                    , Element.Border.color (Element.rgb 0.75 0.75 0.75)
+                    ]
+                    { onChange = SetAngleInDegrees
+                    , label =
+                        Element.Input.labelAbove []
+                            (Element.text "Drag to rotate")
+                    , min = 0
+                    , max = 360
+                    , value = angleInDegrees
+                    , step = Just 1
+                    , thumb = Element.Input.defaultThumb
+                    }
 
-        radioButton ownProjectionType =
-            let
-                label =
-                    toString ownProjectionType
+        radioOption ownProjectionType =
+            Element.Input.option ownProjectionType
+                (Element.text (projectionTypeString ownProjectionType))
 
-                id =
-                    String.toLower label
-            in
-            Html.div []
-                [ InputWidget.radioButton [ Attributes.id id ]
-                    ownProjectionType
-                    projectionType
-                    |> Html.map SetProjectionType
-                , Html.label [ Attributes.for id ] [ Html.text label ]
-                ]
+        radioButtons =
+            Element.Input.radio []
+                { onChange = SetProjectionType
+                , selected = Just projectionType
+                , label =
+                    Element.Input.labelAbove []
+                        (Element.text "Projection type")
+                , options =
+                    [ radioOption Perspective
+                    , radioOption Orthographic
+                    ]
+                }
     in
-    Html.div []
-        [ Html.div [] [ svgElement ]
-        , slider
-        , radioButton Perspective
-        , radioButton Orthographic
-        ]
+    Element.layout [] <|
+        Element.column [ Element.spacing 8 ]
+            [ Element.html drawingElement
+            , slider
+            , radioButtons
+            ]
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.beginnerProgram
-        { model = { angleInDegrees = 0.0, projectionType = Perspective }
+    Browser.sandbox
+        { init = { angleInDegrees = 0.0, projectionType = Perspective }
         , view = view
         , update = update
         }

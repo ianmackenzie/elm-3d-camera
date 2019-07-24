@@ -16,14 +16,16 @@ import Triangle3d exposing (Triangle3d)
 result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
-toScreenSpace : Camera3d -> Triangle3d -> Triangle2d
+toScreenSpace :
+    Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> Triangle3d worldUnits worldCoordinates
+    -> Triangle2d screenUnits screenCoordinates
 toScreenSpace camera triangle =
     let
         ( p1, p2, p3 ) =
             Triangle3d.vertices triangle
     in
     Triangle2d.fromVertices
-        ( Point3d.toScreenSpace camera p1
-        , Point3d.toScreenSpace camera p2
-        , Point3d.toScreenSpace camera p3
-        )
+        (Point3d.toScreenSpace camera p1)
+        (Point3d.toScreenSpace camera p2)
+        (Point3d.toScreenSpace camera p3)

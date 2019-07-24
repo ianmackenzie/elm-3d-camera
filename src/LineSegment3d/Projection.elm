@@ -16,7 +16,10 @@ import Point3d.Projection as Point3d
 result will be in a coordinate system where (0,0) is the bottom left of the
 screen.
 -}
-toScreenSpace : Camera3d -> LineSegment3d -> LineSegment2d
+toScreenSpace :
+    Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> LineSegment3d worldUnits worldCoordinates
+    -> LineSegment2d screenUnits screenCoordinates
 toScreenSpace camera lineSegment =
     let
         ( p1, p2 ) =

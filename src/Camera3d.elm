@@ -1,7 +1,7 @@
 module Camera3d exposing
     ( Camera3d
     , perspective, orthographic
-    , viewpoint, screenWidth, screenHeight
+    , viewpoint, screen
     , ray
     , viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
     )
@@ -36,7 +36,7 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 # Properties
 
-@docs viewpoint, screenWidth, screenHeight
+@docs viewpoint, screen
 
 
 # Ray casting
@@ -50,6 +50,7 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 -}
 
+import Angle exposing (Angle)
 import Axis3d exposing (Axis3d)
 import Camera3d.Types as Types
 import Direction3d exposing (Direction3d)
@@ -57,16 +58,18 @@ import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
 import Point2d exposing (Point2d)
 import Point3d exposing (Point3d)
+import Quantity exposing (Quantity(..), zero)
+import Rectangle2d exposing (Rectangle2d)
 import Vector3d exposing (Vector3d)
 import Viewpoint3d exposing (Viewpoint3d)
 
 
 {-| -}
-type alias Camera3d =
-    Types.Camera3d
+type alias Camera3d worldUnits worldCoordinates screenUnits screenCoordinates =
+    Types.Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
 
 
-makeViewProjectionRecord : Viewpoint3d -> Mat4 -> Types.Mat4Record
+makeViewProjectionRecord : Viewpoint3d units coordinates -> Mat4 -> Types.Mat4Record
 makeViewProjectionRecord givenViewpoint givenProjectionMatrix =
     let
         viewProjectionMatrix =
@@ -91,30 +94,45 @@ match the aspect ratio of the screen given by `screenWidth` and `screenHeight`.
             }
 
 -}
-perspective : { viewpoint : Viewpoint3d, screenWidth : Float, screenHeight : Float, verticalFieldOfView : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera3d
+perspective :
+    { viewpoint : Viewpoint3d worldUnits worldCoordinates
+    , screen : Rectangle2d screenUnits screenCoordinates
+    , verticalFieldOfView : Angle
+    , nearClipDistance : Quantity Float worldUnits
+    , farClipDistance : Quantity Float worldUnits
+    }
+    -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
 perspective arguments =
     let
+        ( screenWidth, screenHeight ) =
+            Rectangle2d.dimensions arguments.screen
+
         aspectRatio =
-            arguments.screenWidth / arguments.screenHeight
+            Quantity.ratio screenWidth screenHeight
 
         fovInDegrees =
-            arguments.verticalFieldOfView / degrees 1
+            Angle.inDegrees arguments.verticalFieldOfView
+
+        (Quantity dn) =
+            arguments.nearClipDistance
+
+        (Quantity df) =
+            arguments.farClipDistance
 
         perspectiveProjectionMatrix =
-            Math.Matrix4.makePerspective
-                fovInDegrees
-                aspectRatio
-                arguments.nearClipDistance
-                arguments.farClipDistance
+            Math.Matrix4.makePerspective fovInDegrees aspectRatio dn df
+
+        frustumSlope =
+            Angle.tan (Quantity.multiplyBy 0.5 arguments.verticalFieldOfView)
 
         screenDistance =
-            arguments.screenHeight
-                / (2 * tan (arguments.verticalFieldOfView / 2))
+            screenHeight
+                |> Quantity.multiplyBy 0.5
+                |> Quantity.divideBy frustumSlope
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , screenWidth = arguments.screenWidth
-        , screenHeight = arguments.screenHeight
+        , screen = arguments.screen
         , projectionMatrix = perspectiveProjectionMatrix
         , viewProjectionRecord =
             makeViewProjectionRecord
@@ -140,71 +158,65 @@ aspect ratio of the screen given by `screenWidth` and `screenHeight`.)
             }
 
 -}
-orthographic : { viewpoint : Viewpoint3d, screenWidth : Float, screenHeight : Float, viewportHeight : Float, nearClipDistance : Float, farClipDistance : Float } -> Camera3d
+orthographic :
+    { viewpoint : Viewpoint3d worldUnits worldCoordinates
+    , screen : Rectangle2d screenUnits screenCoordinates
+    , viewportHeight : Quantity Float worldUnits
+    , nearClipDistance : Quantity Float worldUnits
+    , farClipDistance : Quantity Float worldUnits
+    }
+    -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
 orthographic arguments =
     let
+        ( screenWidth, screenHeight ) =
+            Rectangle2d.dimensions arguments.screen
+
         aspectRatio =
-            arguments.screenWidth / arguments.screenHeight
+            Quantity.ratio screenWidth screenHeight
 
         viewportWidth =
-            aspectRatio * arguments.viewportHeight
+            arguments.viewportHeight |> Quantity.multiplyBy aspectRatio
 
-        left =
-            -viewportWidth / 2
+        (Quantity w) =
+            viewportWidth
 
-        right =
-            viewportWidth / 2
+        (Quantity h) =
+            arguments.viewportHeight
 
-        bottom =
-            -arguments.viewportHeight / 2
+        (Quantity dn) =
+            arguments.nearClipDistance
 
-        top =
-            arguments.viewportHeight / 2
+        (Quantity df) =
+            arguments.farClipDistance
 
         orthographicProjectionMatrix =
-            Math.Matrix4.makeOrtho
-                left
-                right
-                bottom
-                top
-                arguments.nearClipDistance
-                arguments.farClipDistance
+            Math.Matrix4.makeOrtho (-w / 2) (w / 2) (-h / 2) (h / 2) dn df
 
-        pixelsPerUnit =
-            arguments.screenHeight / arguments.viewportHeight
+        resolution =
+            screenHeight |> Quantity.per arguments.viewportHeight
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , screenWidth = arguments.screenWidth
-        , screenHeight = arguments.screenHeight
+        , screen = arguments.screen
         , projectionMatrix = orthographicProjectionMatrix
         , viewProjectionRecord =
             makeViewProjectionRecord
                 arguments.viewpoint
                 orthographicProjectionMatrix
         }
-        (Types.Orthographic { pixelsPerUnit = pixelsPerUnit })
+        (Types.Orthographic { resolution = resolution })
 
 
 {-| Get the viewpoint defining the position and orientation of a camera.
 -}
-viewpoint : Camera3d -> Viewpoint3d
+viewpoint : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Viewpoint3d worldUnits worldCoordinates
 viewpoint (Types.Camera3d properties _) =
     properties.viewpoint
 
 
-{-| Get the width of the screen rendered to by a camera.
--}
-screenWidth : Camera3d -> Float
-screenWidth (Types.Camera3d properties _) =
-    properties.screenWidth
-
-
-{-| Get the height of the screen rendered to by a camera.
--}
-screenHeight : Camera3d -> Float
-screenHeight (Types.Camera3d properties _) =
-    properties.screenHeight
+screen : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Rectangle2d screenUnits screenCoordinates
+screen (Types.Camera3d properties _) =
+    properties.screen
 
 
 {-| Given a camera and a 2D screen point, calculate the corresponding 3D ray as
@@ -218,14 +230,22 @@ constant (the view direction of the camera) but the origin will vary depending
 on the 2D screen point.
 
 -}
-ray : Camera3d -> Point2d -> Axis3d
+ray :
+    Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> Point2d screenUnits screenCoordinates
+    -> Axis3d worldUnits worldCoordinates
 ray (Types.Camera3d properties projection) screenPoint =
     let
         (Types.Viewpoint3d viewpointFrame) =
             properties.viewpoint
 
-        ( x, y ) =
-            Point2d.coordinates screenPoint
+        x =
+            screenPoint
+                |> Point2d.xCoordinateIn (Rectangle2d.axes properties.screen)
+
+        y =
+            screenPoint
+                |> Point2d.yCoordinateIn (Rectangle2d.axes properties.screen)
 
         viewDirection =
             Direction3d.reverse (Frame3d.zDirection viewpointFrame)
@@ -236,19 +256,24 @@ ray (Types.Camera3d properties projection) screenPoint =
                 origin =
                     Frame3d.originPoint viewpointFrame
 
+                z =
+                    Quantity.negate screenDistance
+
                 direction =
-                    Vector3d.fromComponents ( x, y, -screenDistance )
-                        |> Vector3d.placeIn viewpointFrame
+                    Vector3d.xyz x y z
                         |> Vector3d.direction
+                        |> Maybe.map (Direction3d.placeIn viewpointFrame)
                         |> Maybe.withDefault viewDirection
             in
             Axis3d.through origin direction
 
-        Types.Orthographic { pixelsPerUnit } ->
+        Types.Orthographic { resolution } ->
             let
                 origin =
-                    Point3d.fromCoordinatesIn viewpointFrame
-                        ( x / pixelsPerUnit, y / pixelsPerUnit, 0 )
+                    Point3d.xyzIn viewpointFrame
+                        (x |> Quantity.at_ resolution)
+                        (y |> Quantity.at_ resolution)
+                        zero
             in
             Axis3d.through origin viewDirection
 
@@ -263,7 +288,7 @@ is shorthand for
     Viewpoint3d.viewMatrix (Camera3d.viewpoint camera)
 
 -}
-viewMatrix : Camera3d -> Mat4
+viewMatrix : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
 viewMatrix camera =
     Viewpoint3d.viewMatrix (viewpoint camera)
 
@@ -280,7 +305,7 @@ is shorthand for
         (Camera3d.viewpoint camera)
 
 -}
-modelViewMatrix : Frame3d -> Camera3d -> Mat4
+modelViewMatrix : Frame3d worldUnits worldCoordinates defines -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
 modelViewMatrix modelFrame camera =
     Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
 
@@ -289,7 +314,7 @@ modelViewMatrix modelFrame camera =
 of a camera. Multiplying by this matrix converts from eye coordinates to WebGL
 normalized device coordinates.
 -}
-projectionMatrix : Camera3d -> Mat4
+projectionMatrix : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
 projectionMatrix (Types.Camera3d properties _) =
     properties.projectionMatrix
 
@@ -305,7 +330,7 @@ is equivalent to
         (Camera3d.modelViewMatrix modelFrame camera)
 
 -}
-modelViewProjectionMatrix : Frame3d -> Camera3d -> Mat4
+modelViewProjectionMatrix : Frame3d worldUnits worldCoordinates defines -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
 modelViewProjectionMatrix modelFrame camera =
     Math.Matrix4.mul
         (projectionMatrix camera)

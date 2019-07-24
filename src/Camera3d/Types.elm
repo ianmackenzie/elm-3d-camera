@@ -6,12 +6,23 @@ module Camera3d.Types exposing
     , Viewpoint3d(..)
     )
 
+import Frame2d exposing (Frame2d)
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
+import Quantity exposing (Quantity, Rate)
+import Rectangle2d exposing (Rectangle2d)
 
 
-type Viewpoint3d
-    = Viewpoint3d Frame3d
+type EyeCoordinates
+    = EyeCoordinates
+
+
+type ViewPlaneCoordinates
+    = ViewPlaneCoordinates
+
+
+type Viewpoint3d units coordinates
+    = Viewpoint3d (Frame3d units coordinates { defines : EyeCoordinates })
 
 
 type alias Mat4Record =
@@ -34,19 +45,18 @@ type alias Mat4Record =
     }
 
 
-type alias Properties =
-    { viewpoint : Viewpoint3d
+type alias Properties worldUnits worldCoordinates screenUnits screenCoordinates =
+    { viewpoint : Viewpoint3d worldUnits worldCoordinates
+    , screen : Rectangle2d screenUnits screenCoordinates
     , projectionMatrix : Mat4
-    , screenWidth : Float
-    , screenHeight : Float
     , viewProjectionRecord : Mat4Record
     }
 
 
-type Projection
-    = Perspective { screenDistance : Float }
-    | Orthographic { pixelsPerUnit : Float }
+type Projection worldUnits screenUnits
+    = Perspective { screenDistance : Quantity Float screenUnits }
+    | Orthographic { resolution : Quantity Float (Rate screenUnits worldUnits) }
 
 
-type Camera3d
-    = Camera3d Properties Projection
+type Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    = Camera3d (Properties worldUnits worldCoordinates screenUnits screenCoordinates) (Projection worldUnits screenUnits)

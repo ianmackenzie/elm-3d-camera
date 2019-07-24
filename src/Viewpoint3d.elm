@@ -7,7 +7,7 @@ module Viewpoint3d exposing
 
 {-| A `Viewpoint3d` represents the position and orientation of a camera in 3D.
 
-@docs Viewpoint3d
+@docs Viewpoint3d, ViewPlaneCoordinates
 
 
 # Constructors
@@ -37,8 +37,8 @@ import Vector3d exposing (Vector3d)
 
 
 {-| -}
-type alias Viewpoint3d =
-    Types.Viewpoint3d
+type alias Viewpoint3d units coordinates =
+    Types.Viewpoint3d units coordinates
 
 
 {-| Construct a `Viewpoint3d` at the given eye point looking towards the given
@@ -88,7 +88,7 @@ to the global up direction and its X and view directions will be chosen
 arbitrarily.
 
 -}
-lookAt : { focalPoint : Point3d, eyePoint : Point3d, upDirection : Direction3d } -> Viewpoint3d
+lookAt : { focalPoint : Point3d units coordinates, eyePoint : Point3d units coordinates, upDirection : Direction3d coordinates } -> Viewpoint3d units coordinates
 lookAt arguments =
     let
         zVector =
@@ -98,7 +98,7 @@ lookAt arguments =
             Direction3d.toVector arguments.upDirection
 
         xVector =
-            Vector3d.crossProduct yVector zVector
+            yVector |> Vector3d.cross zVector
     in
     case Direction3d.orthonormalize zVector yVector xVector of
         Just ( normalizedZDirection, normalizedYDirection, normalizedXDirection ) ->
@@ -140,14 +140,14 @@ lookAt arguments =
 
 {-| Get the actual eye point of a viewpoint.
 -}
-eyePoint : Viewpoint3d -> Point3d
+eyePoint : Viewpoint3d units coordinates -> Point3d units coordinates
 eyePoint (Types.Viewpoint3d frame) =
     Frame3d.originPoint frame
 
 
 {-| Get the viewing direction of a viewpoint.
 -}
-viewDirection : Viewpoint3d -> Direction3d
+viewDirection : Viewpoint3d units coordinates -> Direction3d coordinates
 viewDirection (Types.Viewpoint3d frame) =
     Direction3d.reverse (Frame3d.zDirection frame)
 
@@ -160,21 +160,21 @@ direction is the _opposite_ of the view direction. (Note that the Y direction
 will _not_ be equal to the global up direction unless the view direction is
 horizontal).
 -}
-viewPlane : Viewpoint3d -> SketchPlane3d
+viewPlane : Viewpoint3d units coordinates -> SketchPlane3d units coordinates defines
 viewPlane (Types.Viewpoint3d frame) =
     Frame3d.xySketchPlane frame
 
 
 {-| Get the X (right) direction of a viewpoint's view plane.
 -}
-xDirection : Viewpoint3d -> Direction3d
+xDirection : Viewpoint3d units coordinates -> Direction3d coordinates
 xDirection (Types.Viewpoint3d frame) =
     Frame3d.xDirection frame
 
 
 {-| Get the Y (local up) direction of a viewpoint's view plane.
 -}
-yDirection : Viewpoint3d -> Direction3d
+yDirection : Viewpoint3d units coordinates -> Direction3d coordinates
 yDirection (Types.Viewpoint3d frame) =
     Frame3d.yDirection frame
 
@@ -183,7 +183,7 @@ yDirection (Types.Viewpoint3d frame) =
 of a viewpoint. Multiplying by this matrix transforms from world coordinates to
 eye coordinates.
 -}
-viewMatrix : Viewpoint3d -> Mat4
+viewMatrix : Viewpoint3d units coordinates -> Mat4
 viewMatrix (Types.Viewpoint3d frame) =
     Frame3d.toMat4 (Frame3d.atOrigin |> Frame3d.relativeTo frame)
 
@@ -203,6 +203,6 @@ Multiplying by this matrix transforms from object coordinates to eye
 coordinates.
 
 -}
-modelViewMatrix : Frame3d -> Viewpoint3d -> Mat4
+modelViewMatrix : Frame3d units coordinates defines -> Viewpoint3d units coordinates -> Mat4
 modelViewMatrix modelFrame (Types.Viewpoint3d frame) =
     Frame3d.toMat4 (modelFrame |> Frame3d.relativeTo frame)
