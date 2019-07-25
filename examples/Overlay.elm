@@ -2,6 +2,7 @@ module Overlay exposing (Model, Msg(..), ProjectionType(..), main, update, view)
 
 import Angle
 import Axis3d
+import BoundingBox2d
 import Browser
 import Camera3d
 import Circle2d
@@ -67,19 +68,18 @@ update message model =
 view : Model -> Html Msg
 view { angleInDegrees, projectionType } =
     let
-        width =
-            pixels 800
+        screenWidth =
+            pixels 500
 
-        height =
-            pixels 600
+        screenHeight =
+            pixels 400
+
+        screenCenter =
+            Frame2d.atXY (pixels 450) (pixels 300)
+                |> Frame2d.rotateBy (Angle.degrees 22.5)
 
         screen =
-            Rectangle2d.fromExtrema
-                { minX = zero
-                , minY = zero
-                , maxX = width
-                , maxY = height
-                }
+            Rectangle2d.centeredOn screenCenter ( screenWidth, screenHeight )
 
         eyePoint =
             Point3d.xyz (logoUnits 4) zero zero
@@ -127,10 +127,10 @@ view { angleInDegrees, projectionType } =
                     (\vertex ->
                         Drawing2d.circle
                             [ Attributes.strokeColor Color.grey
-                            , Attributes.strokeWidth (pixels 2)
+                            , Attributes.strokeWidth (pixels 1)
                             , Attributes.noFill
                             ]
-                            (Circle2d.withRadius (pixels 7) vertex)
+                            (Circle2d.withRadius (pixels 3) vertex)
                     )
 
         drawingLines =
@@ -148,19 +148,25 @@ view { angleInDegrees, projectionType } =
                             edge
                     )
 
-        topLeftFrame =
-            Frame2d.atPoint (Point2d.xy zero height)
-                |> Frame2d.reverseY
+        drawingBounds =
+            BoundingBox2d.fromExtrema
+                { minX = zero
+                , minY = zero
+                , maxX = pixels 800
+                , maxY = pixels 600
+                }
 
         drawingElement =
-            Drawing2d.toHtml (Rectangle2d.boundingBox screen)
+            Drawing2d.toHtml drawingBounds
                 []
-                (drawingLines ++ drawingCircles)
+                (Drawing2d.rectangle [ Attributes.noFill ] screen
+                    :: (drawingLines ++ drawingCircles)
+                )
 
         slider =
             Element.el [ Element.paddingXY 0 6 ] <|
                 Element.Input.slider
-                    [ Element.width (Element.px (round (inPixels width)))
+                    [ Element.width (Element.px 400)
                     , Element.Border.width 1
                     , Element.height (Element.px 6)
                     , Element.Border.rounded 4
@@ -196,7 +202,8 @@ view { angleInDegrees, projectionType } =
     in
     Element.layout [] <|
         Element.column [ Element.spacing 8 ]
-            [ Element.html drawingElement
+            [ Element.el [ Element.Border.width 1 ]
+                (Element.html drawingElement)
             , slider
             , radioButtons
             ]

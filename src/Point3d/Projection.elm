@@ -27,15 +27,6 @@ toScreenSpace (Types.Camera3d camera _) point =
         { m11, m12, m13, m14, m21, m22, m23, m24, m41, m42, m43, m44 } =
             camera.viewProjectionRecord
 
-        ( Quantity width, Quantity height ) =
-            Rectangle2d.dimensions camera.screen
-
-        halfWidth =
-            0.5 * width
-
-        halfHeight =
-            0.5 * height
-
         { x, y, z } =
             Point3d.unwrap point
 
@@ -47,8 +38,16 @@ toScreenSpace (Types.Camera3d camera _) point =
 
         ndcY =
             (m21 * x + m22 * y + m23 * z + m24) / w
+
+        ( width, height ) =
+            Rectangle2d.dimensions camera.screen
+
+        halfWidth =
+            Quantity.multiplyBy 0.5 width
+
+        halfHeight =
+            Quantity.multiplyBy 0.5 height
     in
-    Point2d.unsafe
-        { x = halfWidth + halfWidth * ndcX
-        , y = halfHeight + halfHeight * ndcY
-        }
+    Point2d.xyIn (Rectangle2d.axes camera.screen)
+        (Quantity.multiplyBy ndcX halfWidth)
+        (Quantity.multiplyBy ndcY halfHeight)
