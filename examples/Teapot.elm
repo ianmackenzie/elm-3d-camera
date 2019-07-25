@@ -1,32 +1,38 @@
 module Teapot exposing (main)
 
+import Angle
+import Axis2d
+import Axis3d exposing (Axis3d)
+import Browser
+import Browser.Dom
+import Browser.Events
+import Camera3d exposing (Camera3d)
+import Direction2d exposing (Direction2d)
+import Direction3d exposing (Direction3d)
+import Frame2d
+import Frame3d exposing (Frame3d)
+import Geometry.Interop.LinearAlgebra.Direction3d as Direction3d
+import Geometry.Interop.LinearAlgebra.Frame3d as Frame3d
+import Geometry.Interop.LinearAlgebra.Point3d as Point3d
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Http
 import Json.Decode as Decode exposing (Decoder)
+import Length exposing (Meters, meters)
 import Math.Matrix4 exposing (Mat4)
 import Math.Vector3 exposing (Vec3, vec3)
-import Mouse
-import OpenSolid.Axis3d as Axis3d exposing (Axis3d)
-import OpenSolid.Camera as Camera exposing (Camera)
-import OpenSolid.Direction2d as Direction2d exposing (Direction2d)
-import OpenSolid.Direction3d as Direction3d exposing (Direction3d)
-import OpenSolid.Frame3d as Frame3d exposing (Frame3d)
-import OpenSolid.Interop.LinearAlgebra.Direction3d as Direction3d
-import OpenSolid.Interop.LinearAlgebra.Frame3d as Frame3d
-import OpenSolid.Interop.LinearAlgebra.Point3d as Point3d
-import OpenSolid.Point2d as Point2d exposing (Point2d)
-import OpenSolid.Point3d as Point3d exposing (Point3d)
-import OpenSolid.SketchPlane3d as SketchPlane3d exposing (SketchPlane3d)
-import OpenSolid.Vector2d as Vector2d exposing (Vector2d)
-import OpenSolid.Vector3d as Vector3d exposing (Vector3d)
-import OpenSolid.Viewpoint as Viewpoint
-import SingleTouch
+import Pixels exposing (Pixels, inPixels, pixels)
+import Point2d exposing (Point2d)
+import Point3d exposing (Point3d)
+import Quantity exposing (Quantity(..), zero)
+import Rectangle2d
+import SketchPlane3d exposing (SketchPlane3d)
 import Task
-import Touch exposing (Touch, TouchEvent(..))
+import Vector2d exposing (Vector2d)
+import Vector3d exposing (Vector3d)
+import Viewpoint3d
 import WebGL exposing (Mesh)
-import Window
 
 
 
@@ -34,18 +40,43 @@ import Window
 
 
 type Msg
-    = StartRotatingAt Point2d
-    | PointerMovedTo Point2d
+    = StartRotatingAt (Point2d Pixels TopLeftCoordinates)
+    | PointerMovedTo (Point2d Pixels TopLeftCoordinates)
     | StopRotating
-    | SetWindowSize Window.Size
+    | SetWindowSize WindowSize
     | LoadModel (Result Http.Error (Mesh Attributes))
 
 
+type TopLeftCoordinates
+    = TopLeftCoordinates
+
+
+type WorldCoordinates
+    = WorldCoordinates
+
+
+type ModelCoordinates
+    = ModelCoordinates
+
+
+type ModelUnits
+    = ModelUnits
+
+
+modelUnits : Float -> Quantity Float ModelUnits
+modelUnits value =
+    Quantity value
+
+
+type alias WindowSize =
+    ( Quantity Float Pixels, Quantity Float Pixels )
+
+
 type alias Model =
-    { placementFrame : Frame3d
+    { placementFrame : Frame3d ModelUnits WorldCoordinates { defines : ModelCoordinates }
     , mesh : () -> Maybe (Mesh Attributes)
-    , dragPoint : Maybe Point2d
-    , windowSize : Maybe Window.Size
+    , dragPoint : Maybe (Point2d Pixels TopLeftCoordinates)
+    , windowSize : Maybe WindowSize
     }
 
 
@@ -74,16 +105,16 @@ type alias Varyings =
 -- Constants
 
 
-initialFrame : Frame3d
+initialFrame : Frame3d ModelUnits WorldCoordinates { defines : ModelCoordinates }
 initialFrame =
     Frame3d.atOrigin
-        |> Frame3d.rotateAround Axis3d.z (degrees -30)
-        |> Frame3d.rotateAround Axis3d.y (degrees 20)
+        |> Frame3d.rotateAround Axis3d.z (Angle.degrees -30)
+        |> Frame3d.rotateAround Axis3d.y (Angle.degrees 20)
 
 
-lightDirection : Direction3d
+lightDirection : Direction3d WorldCoordinates
 lightDirection =
-    Vector3d.fromComponents ( -1, -1, -2 )
+    Vector3d.meters -1 -1 -2
         |> Vector3d.direction
         |> Maybe.withDefault Direction3d.negativeZ
 
@@ -97,23 +128,23 @@ faceColor =
 -- Model loading
 
 
-accumulateVertices : List Float -> List Point3d -> List Point3d
+accumulateVertices : List (Quantity Float units) -> List (Point3d units coordinates) -> List (Point3d units coordinates)
 accumulateVertices coordinates accumulated =
     case coordinates of
         x :: y :: z :: rest ->
             accumulateVertices rest
-                (Point3d.fromCoordinates ( x, y, z ) :: accumulated)
+                (Point3d.xyz x y z :: accumulated)
 
         _ ->
             List.reverse accumulated
 
 
-accumulateNormals : List Float -> List Direction3d -> List Direction3d
+accumulateNormals : List Float -> List (Direction3d coordinates) -> List (Direction3d coordinates)
 accumulateNormals components accumulated =
     case components of
         x :: y :: z :: rest ->
             accumulateNormals rest
-                (Direction3d.unsafe ( x, y, z ) :: accumulated)
+                (Direction3d.unsafe { x = x, y = y, z = z } :: accumulated)
 
         _ ->
             List.reverse accumulated
@@ -136,9 +167,9 @@ meshDecoder =
             let
                 frame =
                     Frame3d.atOrigin
-                        |> Frame3d.rotateAround Axis3d.x (degrees 90)
-                        |> Frame3d.translateBy
-                            (Vector3d.fromComponents ( 0, 0, -1 ))
+                        |> Frame3d.rotateAround Axis3d.x (Angle.degrees 90)
+                        |> Frame3d.translateIn Direction3d.negativeZ
+                            (modelUnits 1)
 
                 vertices =
                     accumulateVertices vertexData []
@@ -163,7 +194,7 @@ meshDecoder =
             in
             WebGL.indexedTriangles attributes faces
         )
-        (Decode.field "vertices" (Decode.list Decode.float))
+        (Decode.field "vertices" (Decode.list (Decode.map modelUnits Decode.float)))
         (Decode.field "normals" (Decode.list Decode.float))
         (Decode.field "faces" (Decode.list Decode.int))
 
@@ -172,20 +203,27 @@ meshDecoder =
 -- Rendering
 
 
-camera : Window.Size -> Camera
-camera { width, height } =
-    Camera.perspective
+camera : WindowSize -> Camera3d ModelUnits WorldCoordinates Pixels TopLeftCoordinates
+camera windowSize =
+    let
+        ( width, height ) =
+            windowSize
+
+        screenCenter =
+            Frame2d.atXY (Quantity.multiplyBy 0.5 width) (Quantity.multiplyBy 0.5 height)
+                |> Frame2d.reverseY
+    in
+    Camera3d.perspective
         { viewpoint =
-            Viewpoint.lookAt
-                { eyePoint = Point3d.fromCoordinates ( 15, 0, 0 )
+            Viewpoint3d.lookAt
+                { eyePoint = Point3d.xyz (modelUnits 15) zero zero
                 , focalPoint = Point3d.origin
-                , upDirection = Direction3d.z
+                , upDirection = Direction3d.positiveZ
                 }
-        , verticalFieldOfView = degrees 30
-        , screenWidth = toFloat width
-        , screenHeight = toFloat height
-        , nearClipDistance = 0.1
-        , farClipDistance = 100
+        , verticalFieldOfView = Angle.degrees 30
+        , screen = Rectangle2d.centeredOn screenCenter windowSize
+        , nearClipDistance = modelUnits 0.1
+        , farClipDistance = modelUnits 100
         }
 
 
@@ -226,16 +264,16 @@ fragmentShader =
     |]
 
 
-entity : Mesh Attributes -> Frame3d -> Window.Size -> WebGL.Entity
+entity : Mesh Attributes -> Frame3d ModelUnits WorldCoordinates { defines : ModelCoordinates } -> WindowSize -> WebGL.Entity
 entity mesh placementFrame windowSize =
     let
         camera_ =
             camera windowSize
 
         uniforms =
-            { projectionMatrix = Camera.projectionMatrix camera_
+            { projectionMatrix = Camera3d.projectionMatrix camera_
             , modelMatrix = Frame3d.toMat4 placementFrame
-            , viewMatrix = Camera.viewMatrix camera_
+            , viewMatrix = Camera3d.viewMatrix camera_
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = faceColor
             }
@@ -245,21 +283,15 @@ entity mesh placementFrame windowSize =
 
 
 -- Interactivity
+-- mousePositionToPoint : Mouse.Position -> Point2d
+-- mousePositionToPoint mousePosition =
+--     Point2d.fromCoordinates ( toFloat mousePosition.x, toFloat mousePosition.y )
 
 
-mousePositionToPoint : Mouse.Position -> Point2d
-mousePositionToPoint mousePosition =
-    Point2d.fromCoordinates ( toFloat mousePosition.x, toFloat mousePosition.y )
-
-
-touchToPoint : Touch -> Point2d
-touchToPoint touch =
-    Point2d.fromCoordinates ( touch.clientX, touch.clientY )
-
-
-init : ( Model, Cmd Msg )
-init =
+init : () -> ( Model, Cmd Msg )
+init () =
     let
+        model : Model
         model =
             { placementFrame = initialFrame
             , mesh = always Nothing
@@ -267,32 +299,26 @@ init =
             , windowSize = Nothing
             }
 
+        cmds : Cmd Msg
         cmds =
             Cmd.batch
-                [ Task.perform SetWindowSize Window.size
-                , Http.send LoadModel (Http.get "teapot.json" meshDecoder)
+                [ Task.perform (\{ viewport } -> SetWindowSize ( pixels viewport.width, pixels viewport.height )) Browser.Dom.getViewport
+                , Http.get { url = "teapot.json", expect = Http.expectJson LoadModel meshDecoder }
                 ]
     in
     ( model, cmds )
 
 
+positionDecoder : Decoder (Point2d Pixels TopLeftCoordinates)
+positionDecoder =
+    Decode.map2 Point2d.pixels
+        (Decode.field "clientX" Decode.float)
+        (Decode.field "clientY" Decode.float)
+
+
 dragAttributes : List (Attribute Msg)
 dragAttributes =
-    let
-        onMouseDown pointToMsg =
-            Events.on "mousedown" Mouse.position
-                |> Attributes.map (mousePositionToPoint >> pointToMsg)
-
-        onTouch touchEvent pointToMsg =
-            SingleTouch.onSingleTouch touchEvent Touch.preventAndStop .touch
-                |> Attributes.map (touchToPoint >> pointToMsg)
-    in
-    [ onMouseDown StartRotatingAt
-    , onTouch TouchStart StartRotatingAt
-    , onTouch TouchMove PointerMovedTo
-    , onTouch TouchEnd (always StopRotating)
-    , onTouch TouchCancel (always StopRotating)
-    ]
+    [ Events.on "mousedown" (Decode.map StartRotatingAt positionDecoder) ]
 
 
 view : Model -> Html Msg
@@ -301,13 +327,16 @@ view model =
         ( Just windowSize, Just mesh ) ->
             let
                 blockAttribute =
-                    Attributes.style [ ( "display", "block" ) ]
+                    Attributes.style "display" "block"
+
+                ( width, height ) =
+                    windowSize
 
                 widthAttribute =
-                    Attributes.width windowSize.width
+                    Attributes.width (round (inPixels width))
 
                 heightAttribute =
-                    Attributes.height windowSize.height
+                    Attributes.height (round (inPixels height))
 
                 options =
                     [ WebGL.clearColor 0 0 0 1
@@ -327,13 +356,9 @@ view model =
             Html.text "Loading model..."
 
 
-rotate : Frame3d -> Float -> Float -> Frame3d
-rotate frame dx dy =
-    let
-        dragVector =
-            Vector2d.fromComponents ( dx, dy )
-    in
-    case Vector2d.direction dragVector of
+rotate : Frame3d units coordinates defines -> Vector2d Pixels TopLeftCoordinates -> Frame3d units coordinates defines
+rotate frame dragVector =
+    case Vector2d.direction (Vector2d.mirrorAcross Axis2d.x dragVector) of
         Just direction2d ->
             let
                 axialDirection =
@@ -341,13 +366,12 @@ rotate frame dx dy =
                         Direction2d.perpendicularTo direction2d
 
                 rotationAxis =
-                    Axis3d.with
-                        { originPoint = Point3d.origin
-                        , direction = axialDirection
-                        }
+                    Axis3d.through Point3d.origin axialDirection
 
                 rotationAngle =
-                    degrees 1 * Vector2d.length dragVector
+                    Vector2d.length dragVector
+                        |> Quantity.at
+                            (Angle.degrees 1 |> Quantity.per (pixels 1))
             in
             frame |> Frame3d.rotateAround rotationAxis rotationAngle
 
@@ -368,12 +392,9 @@ update message model =
             case model.dragPoint of
                 Just lastPoint ->
                     let
-                        ( dx, dy ) =
-                            Vector2d.from lastPoint newPoint
-                                |> Vector2d.components
-
                         rotatedFrame =
-                            rotate model.placementFrame dx -dy
+                            rotate model.placementFrame
+                                (Vector2d.from lastPoint newPoint)
 
                         updatedModel =
                             { model
@@ -405,21 +426,24 @@ subscriptions model =
             case model.dragPoint of
                 Just _ ->
                     Sub.batch
-                        [ Mouse.moves (mousePositionToPoint >> PointerMovedTo)
-                        , Mouse.ups (always StopRotating)
+                        [ Browser.Events.onMouseMove (Decode.map PointerMovedTo positionDecoder)
+                        , Browser.Events.onMouseUp (Decode.succeed StopRotating)
                         ]
 
                 Nothing ->
                     Sub.none
     in
-    Sub.batch [ dragEvents, Window.resizes SetWindowSize ]
+    Sub.batch
+        [ dragEvents
+        , Browser.Events.onResize (\width height -> SetWindowSize ( pixels (toFloat width), pixels (toFloat height) ))
+        ]
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.document
         { init = init
-        , view = view
+        , view = \model -> { title = "Teapot", body = [ view model ] }
         , update = update
         , subscriptions = subscriptions
         }
