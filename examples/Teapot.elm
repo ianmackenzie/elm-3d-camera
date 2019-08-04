@@ -22,6 +22,7 @@ import Json.Decode as Decode exposing (Decoder)
 import Length exposing (Meters, meters)
 import Math.Matrix4 exposing (Mat4)
 import Math.Vector3 exposing (Vec3, vec3)
+import Math.Vector4 exposing (Vec4)
 import Pixels exposing (Pixels, inPixels, pixels)
 import Point2d exposing (Point2d)
 import Point3d exposing (Point3d)
@@ -89,7 +90,7 @@ type alias Attributes =
 type alias Uniforms =
     { modelMatrix : Mat4
     , viewMatrix : Mat4
-    , projectionMatrix : Mat4
+    , projectionParameters : Vec4
     , lightDirection : Vec3
     , faceColor : Vec3
     }
@@ -203,16 +204,8 @@ meshDecoder =
 -- Rendering
 
 
-camera : WindowSize -> Camera3d ModelUnits WorldCoordinates Pixels TopLeftCoordinates
-camera windowSize =
-    let
-        ( width, height ) =
-            windowSize
-
-        screenCenter =
-            Frame2d.atXY (Quantity.multiplyBy 0.5 width) (Quantity.multiplyBy 0.5 height)
-                |> Frame2d.reverseY
-    in
+camera : Camera3d ModelUnits WorldCoordinates
+camera =
     Camera3d.perspective
         { viewpoint =
             Viewpoint3d.lookAt
@@ -221,9 +214,7 @@ camera windowSize =
                 , upDirection = Direction3d.positiveZ
                 }
         , verticalFieldOfView = Angle.degrees 30
-        , screen = Rectangle2d.centeredOn screenCenter windowSize
-        , nearClipDistance = modelUnits 0.1
-        , farClipDistance = modelUnits 100
+        , clipDepth = modelUnits 0.1
         }
 
 
@@ -234,12 +225,25 @@ vertexShader =
         attribute vec3 normal;
         uniform mat4 viewMatrix;
         uniform mat4 modelMatrix;
-        uniform mat4 projectionMatrix;
+        uniform vec4 projectionParameters;
         varying vec3 interpolatedPosition;
         varying vec3 interpolatedNormal;
 
+        vec4 project(vec4 position) {
+            float n = projectionParameters.x;
+            float a = projectionParameters.y; 
+            float kc = projectionParameters.z;
+            float kz = projectionParameters.w;
+            return vec4(
+                (kc + kz * position.z) * (position.x / a),
+                (kc + kz * position.z) * position.y,
+                (-position.z - 2.0 * n),
+                -position.z
+            );
+        }
+
         void main () {
-          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+          gl_Position = project(viewMatrix * modelMatrix * vec4(position, 1.0));
           interpolatedPosition = (modelMatrix * vec4(position, 1.0)).xyz;
           interpolatedNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
         }
@@ -267,13 +271,18 @@ fragmentShader =
 entity : Mesh Attributes -> Frame3d ModelUnits WorldCoordinates { defines : ModelCoordinates } -> WindowSize -> WebGL.Entity
 entity mesh placementFrame windowSize =
     let
-        camera_ =
-            camera windowSize
+        ( screenWidth, screenHeight ) =
+            windowSize
 
         uniforms =
-            { projectionMatrix = Camera3d.projectionMatrix camera_
+            { projectionParameters =
+                Camera3d.projectionParameters
+                    { screenAspectRatio =
+                        Quantity.ratio screenWidth screenHeight
+                    }
+                    camera
             , modelMatrix = Frame3d.toMat4 placementFrame
-            , viewMatrix = Camera3d.viewMatrix camera_
+            , viewMatrix = Camera3d.viewMatrix camera
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = faceColor
             }

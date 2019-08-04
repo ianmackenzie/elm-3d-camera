@@ -98,19 +98,15 @@ view { angleInDegrees, projectionType } =
                 Perspective ->
                     Camera3d.perspective
                         { viewpoint = viewpoint
-                        , screen = screen
                         , verticalFieldOfView = Angle.degrees 30
-                        , nearClipDistance = logoUnits 0.1
-                        , farClipDistance = logoUnits 100
+                        , clipDepth = logoUnits 0.1
                         }
 
                 Orthographic ->
                     Camera3d.orthographic
                         { viewpoint = viewpoint
-                        , screen = screen
                         , viewportHeight = logoUnits 2
-                        , nearClipDistance = logoUnits 0.1
-                        , farClipDistance = logoUnits 100
+                        , clipDepth = logoUnits 0.1
                         }
 
         angle =
@@ -119,7 +115,7 @@ view { angleInDegrees, projectionType } =
         vertices2d =
             Logo.vertices
                 |> List.map (Point3d.rotateAround Axis3d.z angle)
-                |> List.map (Point3d.toScreenSpace camera)
+                |> List.filterMap (Point3d.toScreenSpace camera screen)
 
         drawingCircles =
             vertices2d
@@ -136,7 +132,7 @@ view { angleInDegrees, projectionType } =
         drawingLines =
             Logo.edges
                 |> List.map (LineSegment3d.rotateAround Axis3d.z angle)
-                |> List.map (LineSegment3d.toScreenSpace camera)
+                |> List.filterMap (LineSegment3d.toScreenSpace camera screen)
                 |> List.map
                     (\edge ->
                         Drawing2d.lineSegment

@@ -1,9 +1,9 @@
 module Camera3d exposing
     ( Camera3d
     , perspective, orthographic
-    , viewpoint, screen
+    , viewpoint, clipDepth, clipPlane
     , ray
-    , viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
+    , viewMatrix, modelViewMatrix, projectionParameters
     )
 
 {-| A `Camera3d` is a perspective or orthographic camera in 3D, encapsulating
@@ -36,7 +36,7 @@ Cameras have some commmon properties regardless of how they are constructed:
 
 # Properties
 
-@docs viewpoint, screen
+@docs viewpoint, clipDepth, clipPlane
 
 
 # Ray casting
@@ -44,9 +44,9 @@ Cameras have some commmon properties regardless of how they are constructed:
 @docs ray
 
 
-# Matrices
+# WebGL rendering
 
-@docs viewMatrix, modelViewMatrix, projectionMatrix, modelViewProjectionMatrix
+@docs viewMatrix, modelViewMatrix, projectionParameters
 
 -}
 
@@ -56,6 +56,8 @@ import Camera3d.Types as Types
 import Direction3d exposing (Direction3d)
 import Frame3d exposing (Frame3d)
 import Math.Matrix4 exposing (Mat4)
+import Math.Vector4 exposing (Vec4)
+import Plane3d exposing (Plane3d)
 import Point2d exposing (Point2d)
 import Point3d exposing (Point3d)
 import Quantity exposing (Quantity(..), zero)
@@ -65,18 +67,15 @@ import Viewpoint3d exposing (Viewpoint3d)
 
 
 {-| -}
-type alias Camera3d worldUnits worldCoordinates screenUnits screenCoordinates =
-    Types.Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+type alias Camera3d units coordinates =
+    Types.Camera3d units coordinates
 
 
-makeViewProjectionRecord : Viewpoint3d units coordinates -> Mat4 -> Types.Mat4Record
-makeViewProjectionRecord givenViewpoint givenProjectionMatrix =
-    let
-        viewProjectionMatrix =
-            Math.Matrix4.mul givenProjectionMatrix
-                (Viewpoint3d.viewMatrix givenViewpoint)
-    in
-    Math.Matrix4.toRecord viewProjectionMatrix
+offsetClipPlane : Viewpoint3d units coordinates -> Quantity Float units -> Plane3d units coordinates
+offsetClipPlane (Types.Viewpoint3d frame) depth =
+    Plane3d.through
+        (Point3d.along (Frame3d.zAxis frame) (Quantity.negate depth))
+        (Direction3d.reverse (Frame3d.zDirection frame))
 
 
 {-| Create a perspective camera with the common camera properties plus vertical
@@ -95,51 +94,28 @@ match the aspect ratio of the screen given by `screenWidth` and `screenHeight`.
 
 -}
 perspective :
-    { viewpoint : Viewpoint3d worldUnits worldCoordinates
-    , screen : Rectangle2d screenUnits screenCoordinates
+    { viewpoint : Viewpoint3d units coordinates
+    , clipDepth : Quantity Float units
     , verticalFieldOfView : Angle
-    , nearClipDistance : Quantity Float worldUnits
-    , farClipDistance : Quantity Float worldUnits
     }
-    -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> Camera3d units coordinates
 perspective arguments =
     let
-        ( screenWidth, screenHeight ) =
-            Rectangle2d.dimensions arguments.screen
-
-        aspectRatio =
-            Quantity.ratio screenWidth screenHeight
-
-        fovInDegrees =
-            Angle.inDegrees arguments.verticalFieldOfView
-
-        (Quantity dn) =
-            arguments.nearClipDistance
-
-        (Quantity df) =
-            arguments.farClipDistance
-
-        perspectiveProjectionMatrix =
-            Math.Matrix4.makePerspective fovInDegrees aspectRatio dn df
+        halfFieldOfView =
+            Quantity.half (Quantity.abs arguments.verticalFieldOfView)
 
         frustumSlope =
-            Angle.tan (Quantity.multiplyBy 0.5 arguments.verticalFieldOfView)
+            Angle.tan halfFieldOfView
 
-        screenDistance =
-            screenHeight
-                |> Quantity.multiplyBy 0.5
-                |> Quantity.divideBy frustumSlope
+        absoluteClipDepth =
+            Quantity.abs arguments.clipDepth
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , screen = arguments.screen
-        , projectionMatrix = perspectiveProjectionMatrix
-        , viewProjectionRecord =
-            makeViewProjectionRecord
-                arguments.viewpoint
-                perspectiveProjectionMatrix
+        , clipDepth = absoluteClipDepth
+        , clipPlane = offsetClipPlane arguments.viewpoint absoluteClipDepth
+        , projection = Types.Perspective frustumSlope
         }
-        (Types.Perspective { screenDistance = screenDistance })
 
 
 {-| Create an orthographic camera with the common camera properties plus the
@@ -159,64 +135,44 @@ aspect ratio of the screen given by `screenWidth` and `screenHeight`.)
 
 -}
 orthographic :
-    { viewpoint : Viewpoint3d worldUnits worldCoordinates
-    , screen : Rectangle2d screenUnits screenCoordinates
-    , viewportHeight : Quantity Float worldUnits
-    , nearClipDistance : Quantity Float worldUnits
-    , farClipDistance : Quantity Float worldUnits
+    { viewpoint : Viewpoint3d units coordinates
+    , clipDepth : Quantity Float units
+    , viewportHeight : Quantity Float units
     }
-    -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    -> Camera3d units coordinates
 orthographic arguments =
     let
-        ( screenWidth, screenHeight ) =
-            Rectangle2d.dimensions arguments.screen
-
-        aspectRatio =
-            Quantity.ratio screenWidth screenHeight
-
-        viewportWidth =
-            arguments.viewportHeight |> Quantity.multiplyBy aspectRatio
-
-        (Quantity w) =
-            viewportWidth
-
-        (Quantity h) =
-            arguments.viewportHeight
-
-        (Quantity dn) =
-            arguments.nearClipDistance
-
-        (Quantity df) =
-            arguments.farClipDistance
-
-        orthographicProjectionMatrix =
-            Math.Matrix4.makeOrtho (-w / 2) (w / 2) (-h / 2) (h / 2) dn df
-
-        resolution =
-            screenHeight |> Quantity.per arguments.viewportHeight
+        absoluteClipDepth =
+            Quantity.abs arguments.clipDepth
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , screen = arguments.screen
-        , projectionMatrix = orthographicProjectionMatrix
-        , viewProjectionRecord =
-            makeViewProjectionRecord
-                arguments.viewpoint
-                orthographicProjectionMatrix
+        , clipDepth = absoluteClipDepth
+        , clipPlane = offsetClipPlane arguments.viewpoint absoluteClipDepth
+        , projection =
+            Types.Orthographic (Quantity.abs arguments.viewportHeight)
         }
-        (Types.Orthographic { resolution = resolution })
 
 
 {-| Get the viewpoint defining the position and orientation of a camera.
 -}
-viewpoint : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Viewpoint3d worldUnits worldCoordinates
-viewpoint (Types.Camera3d properties _) =
-    properties.viewpoint
+viewpoint : Camera3d units coordinates -> Viewpoint3d units coordinates
+viewpoint (Types.Camera3d camera) =
+    camera.viewpoint
 
 
-screen : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Rectangle2d screenUnits screenCoordinates
-screen (Types.Camera3d properties _) =
-    properties.screen
+{-| Get the clip depth of a camera.
+-}
+clipDepth : Camera3d units coordinates -> Quantity Float units
+clipDepth (Types.Camera3d camera) =
+    camera.clipDepth
+
+
+{-| Get the clip plane of a camera.
+-}
+clipPlane : Camera3d units coordinates -> Plane3d units coordinates
+clipPlane (Types.Camera3d camera) =
+    camera.clipPlane
 
 
 {-| Given a camera and a 2D screen point, calculate the corresponding 3D ray as
@@ -231,51 +187,52 @@ on the 2D screen point.
 
 -}
 ray :
-    Camera3d worldUnits worldCoordinates screenUnits screenCoordinates
+    Camera3d units coordinates
+    -> Rectangle2d screenUnits screenCoordinates
     -> Point2d screenUnits screenCoordinates
-    -> Axis3d worldUnits worldCoordinates
-ray (Types.Camera3d properties projection) screenPoint =
+    -> Axis3d units coordinates
+ray (Types.Camera3d camera) screen point =
     let
         (Types.Viewpoint3d viewpointFrame) =
-            properties.viewpoint
+            camera.viewpoint
 
-        x =
-            screenPoint
-                |> Point2d.xCoordinateIn (Rectangle2d.axes properties.screen)
+        ( screenWidth, screenHeight ) =
+            Rectangle2d.dimensions screen
 
-        y =
-            screenPoint
-                |> Point2d.yCoordinateIn (Rectangle2d.axes properties.screen)
+        screenX =
+            Point2d.xCoordinateIn (Rectangle2d.axes screen) point
 
-        viewDirection =
-            Direction3d.reverse (Frame3d.zDirection viewpointFrame)
+        screenY =
+            Point2d.yCoordinateIn (Rectangle2d.axes screen) point
     in
-    case projection of
-        Types.Perspective { screenDistance } ->
+    case camera.projection of
+        Types.Perspective frustumSlope ->
             let
-                origin =
-                    Frame3d.originPoint viewpointFrame
-
-                z =
-                    Quantity.negate screenDistance
+                screenZ =
+                    Quantity.multiplyBy 0.5 screenHeight
+                        |> Quantity.divideBy frustumSlope
+                        |> Quantity.negate
 
                 direction =
-                    Vector3d.xyz x y z
+                    Vector3d.xyz screenX screenY screenZ
                         |> Vector3d.direction
-                        |> Maybe.map (Direction3d.placeIn viewpointFrame)
-                        |> Maybe.withDefault viewDirection
+                        |> Maybe.withDefault Direction3d.negativeZ
+                        |> Direction3d.placeIn viewpointFrame
             in
-            Axis3d.through origin direction
+            Axis3d.through (Viewpoint3d.eyePoint camera.viewpoint) direction
 
-        Types.Orthographic { resolution } ->
+        Types.Orthographic viewpointHeight ->
             let
+                resolution =
+                    viewpointHeight |> Quantity.per screenHeight
+
                 origin =
                     Point3d.xyzIn viewpointFrame
-                        (x |> Quantity.at_ resolution)
-                        (y |> Quantity.at_ resolution)
+                        (screenX |> Quantity.at resolution)
+                        (screenY |> Quantity.at resolution)
                         zero
             in
-            Axis3d.through origin viewDirection
+            Axis3d.through origin (Viewpoint3d.viewDirection camera.viewpoint)
 
 
 {-| Get the [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
@@ -288,7 +245,7 @@ is shorthand for
     Viewpoint3d.viewMatrix (Camera3d.viewpoint camera)
 
 -}
-viewMatrix : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
+viewMatrix : Camera3d units coordinates -> Mat4
 viewMatrix camera =
     Viewpoint3d.viewMatrix (viewpoint camera)
 
@@ -305,7 +262,7 @@ is shorthand for
         (Camera3d.viewpoint camera)
 
 -}
-modelViewMatrix : Frame3d worldUnits worldCoordinates defines -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
+modelViewMatrix : Frame3d units coordinates defines -> Camera3d units coordinates -> Mat4
 modelViewMatrix modelFrame camera =
     Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
 
@@ -314,24 +271,23 @@ modelViewMatrix modelFrame camera =
 of a camera. Multiplying by this matrix converts from eye coordinates to WebGL
 normalized device coordinates.
 -}
-projectionMatrix : Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
-projectionMatrix (Types.Camera3d properties _) =
-    properties.projectionMatrix
+projectionParameters : { screenAspectRatio : Float } -> Camera3d units coordinates -> Vec4
+projectionParameters { screenAspectRatio } (Types.Camera3d camera) =
+    let
+        (Quantity n) =
+            camera.clipDepth
+    in
+    case camera.projection of
+        Types.Perspective frustumSlope ->
+            Math.Vector4.vec4
+                n
+                screenAspectRatio
+                (1 / frustumSlope)
+                0
 
-
-{-| Get the full model-view-projection matrix given a camera and a `Frame3d`
-that defines the position and orientation of an object;
-
-    Camera3d.modelViewProjectionMatrix modelFrame camera
-
-is equivalent to
-
-    Matrix4.mul (Camera3d.projectionMatrix camera)
-        (Camera3d.modelViewMatrix modelFrame camera)
-
--}
-modelViewProjectionMatrix : Frame3d worldUnits worldCoordinates defines -> Camera3d worldUnits worldCoordinates screenUnits screenCoordinates -> Mat4
-modelViewProjectionMatrix modelFrame camera =
-    Math.Matrix4.mul
-        (projectionMatrix camera)
-        (modelViewMatrix modelFrame camera)
+        Types.Orthographic (Quantity viewportHeight) ->
+            Math.Vector4.vec4
+                n
+                screenAspectRatio
+                0
+                (-2 / viewportHeight)
