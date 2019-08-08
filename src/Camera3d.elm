@@ -267,9 +267,7 @@ modelViewMatrix modelFrame camera =
     Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
 
 
-{-| Get the [projection matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-projection-matrix)
-of a camera. Multiplying by this matrix converts from eye coordinates to WebGL
-normalized device coordinates.
+{-| TODO
 -}
 projectionParameters : { screenAspectRatio : Float } -> Camera3d units coordinates -> Vec4
 projectionParameters { screenAspectRatio } (Types.Camera3d camera) =
