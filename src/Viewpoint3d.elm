@@ -1,6 +1,6 @@
 module Viewpoint3d exposing
     ( Viewpoint3d
-    , lookAt
+    , lookAt, orbit
     , eyePoint, viewDirection, viewPlane, xDirection, yDirection
     , viewMatrix, modelViewMatrix
     )
@@ -12,7 +12,7 @@ module Viewpoint3d exposing
 
 # Constructors
 
-@docs lookAt
+@docs lookAt, orbit
 
 
 # Properties
@@ -26,12 +26,14 @@ module Viewpoint3d exposing
 
 -}
 
+import Angle exposing (Angle)
 import Camera3d.Types as Types
 import Direction3d exposing (Direction3d)
 import Frame3d exposing (Frame3d)
 import Geometry.Interop.LinearAlgebra.Frame3d as Frame3d
 import Math.Matrix4 exposing (Mat4)
 import Point3d exposing (Point3d)
+import Quantity exposing (Quantity)
 import SketchPlane3d exposing (SketchPlane3d)
 import Vector3d exposing (Vector3d)
 
@@ -136,6 +138,64 @@ lookAt arguments =
                             , yDirection = arguments.upDirection
                             , zDirection = arbitraryZDirection
                             }
+
+
+{-| Construct a `Viewpoint3d` looking at the given focal point, the given
+distance away. The direction from the focal point to the eye point is defined by
+the given azimuth and elevation angles, which are with respect to the given
+ground plane (the position of the ground plane does not matter, only its
+orientation). For example,
+
+    Viewpoint3d.orbit
+        { focalPoint = Point3d.meters 0 0 1
+        , groundPlane = SketchPlane3d.xy
+        , azimuth = Angle.degrees 0
+        , elevation = Angle.degrees 45
+        , distance = Length.meters 10
+        }
+
+is equivalent to
+
+    Viewpoint3d.lookAt
+        { focalPoint = Point3d.meters 0 0 1
+        , eyePoint = Point3d.meters 7.071 0 8.071
+        , upDirection = Direction3d.z
+        }
+
+As the name suggests, `Viewpoint3d.orbit` is useful for making orbiting cameras;
+you can orbit around the focal point by changing just the azimuth, and rotate
+up and down by changing just the elevation.
+
+-}
+orbit :
+    { focalPoint : Point3d units coordinates
+    , groundPlane : SketchPlane3d units coordinates defines
+    , azimuth : Angle
+    , elevation : Angle
+    , distance : Quantity Float units
+    }
+    -> Viewpoint3d units coordinates
+orbit arguments =
+    let
+        initialFrame =
+            Frame3d.unsafe
+                { originPoint = arguments.focalPoint
+                , zDirection =
+                    SketchPlane3d.xDirection arguments.groundPlane
+                , xDirection =
+                    SketchPlane3d.yDirection arguments.groundPlane
+                , yDirection =
+                    SketchPlane3d.normalDirection arguments.groundPlane
+                }
+
+        finalFrame =
+            initialFrame
+                |> Frame3d.rotateAroundOwn Frame3d.yAxis arguments.azimuth
+                |> Frame3d.rotateAroundOwn Frame3d.xAxis
+                    (Quantity.negate arguments.elevation)
+                |> Frame3d.translateAlongOwn Frame3d.zAxis arguments.distance
+    in
+    Types.Viewpoint3d finalFrame
 
 
 {-| Get the actual eye point of a viewpoint.
