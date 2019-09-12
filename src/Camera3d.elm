@@ -20,16 +20,12 @@ screen the camera renders to. This module contains functions for:
 
 # Constructors
 
-Cameras have some commmon properties regardless of how they are constructed:
+Cameras have a couple of commmon properties regardless of how they are
+constructed:
 
   - `viewpoint` defines the position and orientation of the camera in 3D space.
-  - `nearClipDistance` and `farClipDistance` specify the standard near and far
-    clipping planes used when rendering.
-  - `screenWidth` and `screenHeight` specify the dimensions in pixels of the
-    screen that will be rendered to (the dimensions of an actual WebGl element,
-    for example). This is used to determine aspect ratio when constructing the
-    camera's projection matrix, but also by functions such as `Camera3d.point2d`
-    which convert from 3D world space to 2D screen space for a given camera.
+  - `clipDepth` specifies the standard near clipping plane used when rendering.
+    The far clipping plane is assumed to be at infinity.
 
 @docs perspective, orthographic
 

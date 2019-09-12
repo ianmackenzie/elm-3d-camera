@@ -7,7 +7,7 @@ module Viewpoint3d exposing
 
 {-| A `Viewpoint3d` represents the position and orientation of a camera in 3D.
 
-@docs Viewpoint3d, ViewPlaneCoordinates
+@docs Viewpoint3d
 
 
 # Constructors

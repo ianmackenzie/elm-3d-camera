@@ -1,11 +1,8 @@
-module Triangle3d.Projection exposing
-    ( toScreenSpace
-    , isFrontFacing
-    )
+module Triangle3d.Projection exposing (toScreenSpace, isFrontFacing)
 
 {-|
 
-@docs toScreenSpace
+@docs toScreenSpace, isFrontFacing
 
 -}
 
@@ -69,6 +66,8 @@ toScreenSpace camera screen triangle =
             Just (Polygon2d.singleLoop vertices)
 
 
+{-| Check if a given triangle is front facing with respect to the given camera.
+-}
 isFrontFacing : Camera3d units coordinates -> Triangle3d units coordinates -> Bool
 isFrontFacing camera triangle =
     case Triangle3d.normalDirection triangle of
