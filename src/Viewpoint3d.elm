@@ -50,27 +50,22 @@ viewpoint at the point (10, 0, 5) looking towards the origin:
 
     viewpoint =
         Viewpoint3d.lookAt
-            { eyePoint =
-                Point3d.fromCoordinates ( 10, 0, 5 )
+            { eyePoint = Point3d.meters 10 0 5
             , focalPoint = Point3d.origin
             , upDirection = Direction3d.positiveZ
             }
 
     Viewpoint3d.eyePoint viewpoint
-    --> Point3d.fromCoordinates ( 10, 0, 5 )
+    --> Point3d.meters 10 0 5
 
     Viewpoint3d.xDirection viewpoint
     --> Direction3d.positiveY
 
     Viewpoint3d.yDirection viewpoint
-    --> Direction3d.fromAzimuthAndElevation
-    -->     (degrees 180)
-    -->     (degrees 63.43)
+    --> Direction3d.xz (Angle.degrees 116.57)
 
     Viewpoint3d.viewDirection viewpoint
-    --> Direction3d.fromAzimuthAndElevation
-    -->     (degrees 180)
-    -->     (degrees -26.57)
+    --> Direction3d.xz (Angle.degrees -153.43)
 
 That is likely all you need to know but if you are interested in the details and
 corner cases, read on!

@@ -78,18 +78,14 @@ offsetClipPlane (Types.Viewpoint3d frame) depth =
         (Direction3d.reverse (Frame3d.zDirection frame))
 
 
-{-| Create a perspective camera with the common camera properties plus vertical
-field of view given in radians. The horizontal field of view will be chosen to
-match the aspect ratio of the screen given by `screenWidth` and `screenHeight`.
+{-| Create a perspective camera from a viewpoint, a vertical field of view and a
+clip depth.
 
     perspectiveCamera =
         Camera3d.perspective
             { viewpoint = cameraViewpoint
-            , verticalFieldOfView = degrees 30
-            , nearClipDistance = 0.1
-            , farClipDistance = 1000
-            , screenWidth = 1024
-            , screenHeight = 768
+            , verticalFieldOfView = Angle.degrees 30
+            , clipDepth = Length.meters 0.1
             }
 
 -}
@@ -118,19 +114,15 @@ perspective arguments =
         }
 
 
-{-| Create an orthographic camera with the common camera properties plus the
-height of the orthographic viewport: this is the height in 3D world units of the
-section of the model to be rendered. (The width will be chosen to match the
-aspect ratio of the screen given by `screenWidth` and `screenHeight`.)
+{-| Create an orthographic camera from a viewpoint, a clip depth and the height
+of the orthographic viewport: this is the height in 3D world units of the
+section of the model to be rendered.
 
     orthographicCamera =
         Camera3d.orthographic
             { viewpoint = cameraViewpoint
-            , viewportHeight = 5
-            , nearClipDistance = 0.1
-            , farClipDistance = 1000
-            , screenWidth = 1024
-            , screenHeight = 768
+            , viewportHeight = Length.meters 5
+            , clipDepth = Length.meters 0.1
             }
 
 -}
@@ -267,7 +259,28 @@ modelViewMatrix modelFrame camera =
     Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
 
 
-{-| TODO
+{-| Construct a special `Vec4` containing values useful for settting up
+perspective and orthographic projection in WebGL. For a perspective camera,
+the entries are
+
+```
+clip depth
+screen aspect ratio
+1 / camera frustum slope
+0
+```
+
+For an orthographic camera, the entries are
+
+```
+clip depth
+screen aspect ratio
+0
+-2 / camera viewport height
+```
+
+Currently used internally by `elm-3d-scene`.
+
 -}
 projectionParameters : { screenAspectRatio : Float } -> Camera3d units coordinates -> Vec4
 projectionParameters { screenAspectRatio } (Types.Camera3d camera) =

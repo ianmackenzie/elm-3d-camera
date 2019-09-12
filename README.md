@@ -18,7 +18,7 @@ and orientation of the camera:
 ```elm
 cameraViewpoint =
     Viewpoint3d.lookAt
-        { eyePoint = Point3d.fromCoordinates ( 10, 0, 5 )
+        { eyePoint = Point3d.meters 10 0 5
         , focalPoint = Point3d.origin
         , upDirection = Direction3d.positiveZ
         }
@@ -31,43 +31,30 @@ viewpoint:
 perspectiveCamera =
     Camera3d.perspective
         { viewpoint = cameraViewpoint
-        , verticalFieldOfView = degrees 30
-        , nearClipDistance = 0.1
-        , farClipDistance = 1000
-        , screenWidth = 1024
-        , screenHeight = 768
+        , verticalFieldOfView = Angle.degrees 30
+        , clipDepth = Length.meters 0.1
         }
 
 orthographicCamera =
     Camera3d.orthographic
         { viewpoint = cameraViewpoint
-        , viewportHeight = 5
-        , nearClipDistance = 0.1
-        , farClipDistance = 1000
-        , screenWidth = 1024
-        , screenHeight = 768
+        , viewportHeight = Length.meters 5
+        , clipDepth = 0.1
         }
 ```
 
 ## WebGL rendering
 
-Once you have a camera, you can use it to get WebGL model/view/projection
-matrices:
+Once you have a camera, you can use it to get WebGL view matrices and
+'projection properties':
 
 ```elm
-projectionMatrix =
-    Camera.projectionMatrix camera
-
 viewMatrix =
     Camera.viewMatrix camera
 
-modelViewProjectionMatrix =
-    Camera3d.modelViewProjectionMatrix modelFrame camera
+projectionProperties =
+    Camera.projectionProperties camera
 ```
-
-(In the final example, the position and orientation of the object to be
-rendered is defined by an `elm-geometry` [`Frame3d`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest/Frame3d)
-value.)
 
 ## Projection to screen space
 
@@ -96,7 +83,7 @@ difficult to do with WebGL):
 
 Several more features are planned:
 
-  - More `Viewpoint3d` constructors other than just `lookAt`
+  - More `Viewpoint3d` constructors other than just `lookAt` and `orbit`
   - More 3D-to-2D projections (directions, axes)
   - Construction of 3D pick rays and cut planes from 2D screen points and lines
 
