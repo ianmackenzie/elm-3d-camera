@@ -9,15 +9,15 @@
         "Viewpoint3d",
         "Point3d.Projection",
         "LineSegment3d.Projection",
-        "Triangle3d.Projection",
-        "Polyline3d.Projection"
+        "Triangle3d.Projection"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
         "elm/core": "1.0.0 <= v < 2.0.0",
-        "elm-explorations/linear-algebra": "1.0.0 <= v < 2.0.0",
-        "ianmackenzie/elm-geometry": "1.2.0 <= v < 2.0.0",
-        "ianmackenzie/elm-geometry-linear-algebra-interop": "1.0.0 <= v < 2.0.0"
+        "elm-explorations/linear-algebra": "1.0.3 <= v < 2.0.0",
+        "ianmackenzie/elm-geometry": "2.0.0 <= v < 3.0.0",
+        "ianmackenzie/elm-geometry-linear-algebra-interop": "2.0.0 <= v < 3.0.0",
+        "ianmackenzie/elm-units": "2.2.0 <= v < 3.0.0"
     },
     "test-dependencies": {}
 }
