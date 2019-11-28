@@ -99,8 +99,6 @@ using `elm-3d-camera`, try:
     particular questions right now, it would be great to know what you're hoping
     to do with the package!
   - Posting to the [Elm Discourse](https://discourse.elm-lang.org/) forums
-  - Or if you happen to be in the New York area, come on out to the
-    [Elm NYC meetup](https://www.meetup.com/Elm-NYC/) =)
 
 You can also find me on Twitter ([@ianemackenzie](https://twitter.com/ianemackenzie)),
 where I occasionally post `elm-geometry`-related stuff like demos or new
