@@ -91,7 +91,7 @@ Several more features are planned:
 
   - More `Viewpoint3d` constructors other than just `lookAt` and `orbit`
   - More 3D-to-2D projections (directions, axes)
-  - Construction of 3D pick rays and cut planes from 2D screen points and lines
+  - Construction of 3D cut planes from 2D on-screen lines
 
 ## Questions? Comments?
 
