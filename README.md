@@ -65,11 +65,17 @@ from 3D to 2D:
 import Point3d.Projection as Point3d
 import LineSegment3d.Projection as LineSegment3d
 
+screen =
+    Rectangle2d.from
+        Point2d.origin
+        (Point2d.pixels 800 600)
+
 point2d =
-    point3d |> Point3d.toScreenSpace camera
+    point3d |> Point3d.toScreenSpace camera screen
 
 lineSegment2d =
-    lineSegment3d |> LineSegment3d.toScreenSpace camera
+    lineSegment3d
+        |> LineSegment3d.toScreenSpace camera screen
 ```
 
 This allows you to, for example, do a perspective projection of 3D points and
