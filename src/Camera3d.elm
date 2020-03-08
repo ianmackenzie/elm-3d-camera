@@ -208,6 +208,14 @@ modelViewMatrix modelFrame camera =
 and far clip distances as well as the aspect ratio (width over height) of the
 WebGL window being rendered to. Refer to the [above resources](#webgl-rendering)
 for details of how projection matrices are defined and used.
+
+Using a value of infinity for `farClipDistance` is supported, and this often
+works well for perspective cameras, but for orthographic cameras an infinite
+far clip distance means that depth testing will not work. For things like line
+drawings this might be fine, but if you are depending on closer objects being
+properly drawn in front of further-away objects (at least when using an
+orthographic camera) then you will have to specify a finite far clip distance.
+
 -}
 projectionMatrix :
     { nearClipDistance : Quantity Float units
@@ -226,44 +234,86 @@ projectionMatrix { nearClipDistance, farClipDistance, aspectRatio } (Types.Camer
     in
     case camera.projection of
         Types.Perspective frustumSlope ->
-            Math.Matrix4.fromRecord
-                { m11 = 1 / (aspectRatio * frustumSlope)
-                , m21 = 0
-                , m31 = 0
-                , m41 = 0
-                , m12 = 0
-                , m22 = 1 / frustumSlope
-                , m32 = 0
-                , m42 = 0
-                , m13 = 0
-                , m23 = 0
-                , m33 = -(f + n) / (f - n)
-                , m43 = -1
-                , m14 = 0
-                , m24 = 0
-                , m34 = -2 * f * n / (f - n)
-                , m44 = 0
-                }
+            if isInfinite f then
+                Math.Matrix4.fromRecord
+                    { m11 = 1 / (aspectRatio * frustumSlope)
+                    , m21 = 0
+                    , m31 = 0
+                    , m41 = 0
+                    , m12 = 0
+                    , m22 = 1 / frustumSlope
+                    , m32 = 0
+                    , m42 = 0
+                    , m13 = 0
+                    , m23 = 0
+                    , m33 = -1
+                    , m43 = -1
+                    , m14 = 0
+                    , m24 = 0
+                    , m34 = -2 * n
+                    , m44 = 0
+                    }
+
+            else
+                Math.Matrix4.fromRecord
+                    { m11 = 1 / (aspectRatio * frustumSlope)
+                    , m21 = 0
+                    , m31 = 0
+                    , m41 = 0
+                    , m12 = 0
+                    , m22 = 1 / frustumSlope
+                    , m32 = 0
+                    , m42 = 0
+                    , m13 = 0
+                    , m23 = 0
+                    , m33 = -(f + n) / (f - n)
+                    , m43 = -1
+                    , m14 = 0
+                    , m24 = 0
+                    , m34 = -2 * f * n / (f - n)
+                    , m44 = 0
+                    }
 
         Types.Orthographic (Quantity viewportHeight) ->
-            Math.Matrix4.fromRecord
-                { m11 = 2 / (aspectRatio * viewportHeight)
-                , m21 = 0
-                , m31 = 0
-                , m41 = 0
-                , m12 = 0
-                , m22 = 2 / viewportHeight
-                , m32 = 0
-                , m42 = 0
-                , m13 = 0
-                , m23 = 0
-                , m33 = -2 / (f - n)
-                , m43 = 0
-                , m14 = 0
-                , m24 = 0
-                , m34 = -(f + n) / (f - n)
-                , m44 = 1
-                }
+            if isInfinite f then
+                Math.Matrix4.fromRecord
+                    { m11 = 2 / (aspectRatio * viewportHeight)
+                    , m21 = 0
+                    , m31 = 0
+                    , m41 = 0
+                    , m12 = 0
+                    , m22 = 2 / viewportHeight
+                    , m32 = 0
+                    , m42 = 0
+                    , m13 = 0
+                    , m23 = 0
+                    , m33 = 0
+                    , m43 = 0
+                    , m14 = 0
+                    , m24 = 0
+                    , m34 = -1
+                    , m44 = 1
+                    }
+
+            else
+                Math.Matrix4.fromRecord
+                    { m11 = 2 / (aspectRatio * viewportHeight)
+                    , m21 = 0
+                    , m31 = 0
+                    , m41 = 0
+                    , m12 = 0
+                    , m22 = 2 / viewportHeight
+                    , m32 = 0
+                    , m42 = 0
+                    , m13 = 0
+                    , m23 = 0
+                    , m33 = -2 / (f - n)
+                    , m43 = 0
+                    , m14 = 0
+                    , m24 = 0
+                    , m34 = -(f + n) / (f - n)
+                    , m44 = 1
+                    }
 
 
 {-| Construct a WebGL view-projection matrix for a given camera; this is the
