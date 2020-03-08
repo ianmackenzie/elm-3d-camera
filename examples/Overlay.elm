@@ -9,13 +9,11 @@ import Circle2d
 import Color
 import Direction3d
 import Drawing2d
-import Drawing2d.Attributes as Attributes
 import Element
 import Element.Border
 import Element.Input
 import Frame2d
 import Html exposing (Html)
-import Html.Attributes as Attributes
 import Length exposing (meters)
 import LineSegment3d
 import LineSegment3d.Projection as LineSegment3d
@@ -75,7 +73,7 @@ view { angleInDegrees, projectionType } =
             pixels 400
 
         screenCenter =
-            Frame2d.atXY (pixels 450) (pixels 300)
+            Frame2d.atPoint (Point2d.pixels 450 300)
                 |> Frame2d.rotateBy (Angle.degrees 22.5)
 
         screen =
@@ -99,14 +97,12 @@ view { angleInDegrees, projectionType } =
                     Camera3d.perspective
                         { viewpoint = viewpoint
                         , verticalFieldOfView = Angle.degrees 30
-                        , clipDepth = logoUnits 0.1
                         }
 
                 Orthographic ->
                     Camera3d.orthographic
                         { viewpoint = viewpoint
                         , viewportHeight = logoUnits 2
-                        , clipDepth = logoUnits 0.1
                         }
 
         angle =
@@ -115,16 +111,16 @@ view { angleInDegrees, projectionType } =
         vertices2d =
             Logo.vertices
                 |> List.map (Point3d.rotateAround Axis3d.z angle)
-                |> List.filterMap (Point3d.toScreenSpace camera screen)
+                |> List.map (Point3d.toScreenSpace camera screen)
 
         drawingCircles =
             vertices2d
                 |> List.map
                     (\vertex ->
                         Drawing2d.circle
-                            [ Attributes.strokeColor Color.grey
-                            , Attributes.strokeWidth (pixels 1)
-                            , Attributes.noFill
+                            [ Drawing2d.strokeColor Color.grey
+                            , Drawing2d.strokeWidth (pixels 1)
+                            , Drawing2d.noFill
                             ]
                             (Circle2d.withRadius (pixels 3) vertex)
                     )
@@ -132,12 +128,12 @@ view { angleInDegrees, projectionType } =
         drawingLines =
             Logo.edges
                 |> List.map (LineSegment3d.rotateAround Axis3d.z angle)
-                |> List.filterMap (LineSegment3d.toScreenSpace camera screen)
+                |> List.map (LineSegment3d.toScreenSpace camera screen)
                 |> List.map
                     (\edge ->
                         Drawing2d.lineSegment
-                            [ Attributes.strokeColor Color.grey
-                            , Attributes.strokeWidth (pixels 1)
+                            [ Drawing2d.strokeColor Color.grey
+                            , Drawing2d.strokeWidth (pixels 1)
 
                             --, Attributes.strokeDasharray "5 5"
                             ]
@@ -153,9 +149,12 @@ view { angleInDegrees, projectionType } =
                 }
 
         drawingElement =
-            Drawing2d.toHtml drawingBounds
+            Drawing2d.toHtml
+                { viewBox = drawingBounds
+                , size = Drawing2d.fixed 
+                }
                 []
-                (Drawing2d.rectangle [ Attributes.noFill ] screen
+                (Drawing2d.rectangle [ Drawing2d.noFill ] screen
                     :: (drawingLines ++ drawingCircles)
                 )
 

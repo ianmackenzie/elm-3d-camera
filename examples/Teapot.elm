@@ -90,7 +90,7 @@ type alias Attributes =
 type alias Uniforms =
     { modelMatrix : Mat4
     , viewMatrix : Mat4
-    , projectionParameters : Vec4
+    , projectionMatrix : Mat4
     , lightDirection : Vec3
     , faceColor : Vec3
     }
@@ -214,7 +214,6 @@ camera =
                 , upDirection = Direction3d.positiveZ
                 }
         , verticalFieldOfView = Angle.degrees 30
-        , clipDepth = modelUnits 0.1
         }
 
 
@@ -225,25 +224,12 @@ vertexShader =
         attribute vec3 normal;
         uniform mat4 viewMatrix;
         uniform mat4 modelMatrix;
-        uniform vec4 projectionParameters;
+        uniform mat4 projectionMatrix;
         varying vec3 interpolatedPosition;
         varying vec3 interpolatedNormal;
 
-        vec4 project(vec4 position) {
-            float n = projectionParameters.x;
-            float a = projectionParameters.y; 
-            float kc = projectionParameters.z;
-            float kz = projectionParameters.w;
-            return vec4(
-                (kc + kz * position.z) * (position.x / a),
-                (kc + kz * position.z) * position.y,
-                (-position.z - 2.0 * n),
-                -position.z
-            );
-        }
-
         void main () {
-          gl_Position = project(viewMatrix * modelMatrix * vec4(position, 1.0));
+          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
           interpolatedPosition = (modelMatrix * vec4(position, 1.0)).xyz;
           interpolatedNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
         }
@@ -275,10 +261,11 @@ entity mesh placementFrame windowSize =
             windowSize
 
         uniforms =
-            { projectionParameters =
-                Camera3d.projectionParameters
-                    { screenAspectRatio =
-                        Quantity.ratio screenWidth screenHeight
+            { projectionMatrix =
+                Camera3d.projectionMatrix
+                    { aspectRatio = Quantity.ratio screenWidth screenHeight
+                    , nearClipDistance = modelUnits 1
+                    , farClipDistance = modelUnits 100
                     }
                     camera
             , modelMatrix = Frame3d.toMat4 placementFrame
