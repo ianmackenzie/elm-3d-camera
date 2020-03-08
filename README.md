@@ -4,8 +4,9 @@ This package is provides convenient ways to define and use perspective and
 orthographic cameras in 3D. It is based on [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest)
 and has two main goals:
 
-  - Provide a way to construct WebGL model/view/projection matrices that is more
-    intuitive than using [`elm-explorations/linear-algebra`](http://package.elm-lang.org/packages/elm-explorations/linear-algebra/latest)
+  - Provide a way to construct [WebGL](https://package.elm-lang.org/packages/elm-explorations/webgl/latest/)
+    model/view/projection matrices that is more intuitive than using
+    [`elm-explorations/linear-algebra`](http://package.elm-lang.org/packages/elm-explorations/linear-algebra/latest)
     directly
   - Provide standalone 3D-to-2D projection functionality that can be used
     outside of WebGL
@@ -32,28 +33,31 @@ perspectiveCamera =
     Camera3d.perspective
         { viewpoint = cameraViewpoint
         , verticalFieldOfView = Angle.degrees 30
-        , clipDepth = Length.meters 0.1
         }
 
 orthographicCamera =
     Camera3d.orthographic
         { viewpoint = cameraViewpoint
         , viewportHeight = Length.meters 5
-        , clipDepth = 0.1
         }
 ```
 
 ## WebGL rendering
 
-Once you have a camera, you can use it to get WebGL view matrices and
-'projection properties':
+Once you have a camera, you can use it to get WebGL view and projection
+matrices:
 
 ```elm
 viewMatrix =
     Camera.viewMatrix camera
 
-projectionProperties =
-    Camera.projectionProperties camera
+projectionMatrix =
+    Camera.projectionMatrix
+        { nearClipDepth = Length.meters 0.1
+        , farClipDepth = Length.meters 100
+        , aspectRatio = 16 / 9
+        }
+        camera
 ```
 
 ## Projection to screen space
@@ -66,8 +70,7 @@ import Point3d.Projection as Point3d
 import LineSegment3d.Projection as LineSegment3d
 
 screen =
-    Rectangle2d.from
-        Point2d.origin
+    Rectangle2d.from Point2d.origin
         (Point2d.pixels 800 600)
 
 point2d =

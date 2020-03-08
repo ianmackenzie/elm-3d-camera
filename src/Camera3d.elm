@@ -1,9 +1,9 @@
 module Camera3d exposing
     ( Camera3d
     , perspective, orthographic
-    , viewpoint, clipDepth, clipPlane
+    , viewpoint
     , ray
-    , viewMatrix, modelViewMatrix, projectionParameters
+    , viewMatrix, modelViewMatrix, projectionMatrix, viewProjectionMatrix, modelViewProjectionMatrix
     )
 
 {-| A `Camera3d` is a perspective or orthographic camera in 3D, encapsulating
@@ -20,19 +20,12 @@ screen the camera renders to. This module contains functions for:
 
 # Constructors
 
-Cameras have a couple of commmon properties regardless of how they are
-constructed:
-
-  - `viewpoint` defines the position and orientation of the camera in 3D space.
-  - `clipDepth` specifies the standard near clipping plane used when rendering.
-    The far clipping plane is assumed to be at infinity.
-
 @docs perspective, orthographic
 
 
 # Properties
 
-@docs viewpoint, clipDepth, clipPlane
+@docs viewpoint
 
 
 # Ray casting
@@ -42,7 +35,14 @@ constructed:
 
 # WebGL rendering
 
-@docs viewMatrix, modelViewMatrix, projectionParameters
+These matrices can be used for rendering 3D [WebGL](https://package.elm-lang.org/packages/elm-explorations/webgl/latest/)
+scenes. For in-depth explanations of how these matrices are used, check out
+
+  - <https://learnopengl.com/Getting-started/Coordinate-Systems>
+  - <http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/>
+  - <http://www.songho.ca/opengl/gl_transform.html>
+
+@docs viewMatrix, modelViewMatrix, projectionMatrix, viewProjectionMatrix, modelViewProjectionMatrix
 
 -}
 
@@ -67,27 +67,17 @@ type alias Camera3d units coordinates =
     Types.Camera3d units coordinates
 
 
-offsetClipPlane : Viewpoint3d units coordinates -> Quantity Float units -> Plane3d units coordinates
-offsetClipPlane (Types.Viewpoint3d frame) depth =
-    Plane3d.through
-        (Point3d.along (Frame3d.zAxis frame) (Quantity.negate depth))
-        (Direction3d.reverse (Frame3d.zDirection frame))
-
-
-{-| Create a perspective camera from a viewpoint, a vertical field of view and a
-clip depth.
+{-| Create a perspective camera from a viewpoint and a vertical field of view.
 
     perspectiveCamera =
         Camera3d.perspective
             { viewpoint = cameraViewpoint
             , verticalFieldOfView = Angle.degrees 30
-            , clipDepth = Length.meters 0.1
             }
 
 -}
 perspective :
     { viewpoint : Viewpoint3d units coordinates
-    , clipDepth : Quantity Float units
     , verticalFieldOfView : Angle
     }
     -> Camera3d units coordinates
@@ -98,14 +88,9 @@ perspective arguments =
 
         frustumSlope =
             Angle.tan halfFieldOfView
-
-        absoluteClipDepth =
-            Quantity.abs arguments.clipDepth
     in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , clipDepth = absoluteClipDepth
-        , clipPlane = offsetClipPlane arguments.viewpoint absoluteClipDepth
         , projection = Types.Perspective frustumSlope
         }
 
@@ -118,27 +103,18 @@ section of the model to be rendered.
         Camera3d.orthographic
             { viewpoint = cameraViewpoint
             , viewportHeight = Length.meters 5
-            , clipDepth = Length.meters 0.1
             }
 
 -}
 orthographic :
     { viewpoint : Viewpoint3d units coordinates
-    , clipDepth : Quantity Float units
     , viewportHeight : Quantity Float units
     }
     -> Camera3d units coordinates
 orthographic arguments =
-    let
-        absoluteClipDepth =
-            Quantity.abs arguments.clipDepth
-    in
     Types.Camera3d
         { viewpoint = arguments.viewpoint
-        , clipDepth = absoluteClipDepth
-        , clipPlane = offsetClipPlane arguments.viewpoint absoluteClipDepth
-        , projection =
-            Types.Orthographic (Quantity.abs arguments.viewportHeight)
+        , projection = Types.Orthographic (Quantity.abs arguments.viewportHeight)
         }
 
 
@@ -149,23 +125,10 @@ viewpoint (Types.Camera3d camera) =
     camera.viewpoint
 
 
-{-| Get the clip depth of a camera.
--}
-clipDepth : Camera3d units coordinates -> Quantity Float units
-clipDepth (Types.Camera3d camera) =
-    camera.clipDepth
-
-
-{-| Get the clip plane of a camera.
--}
-clipPlane : Camera3d units coordinates -> Plane3d units coordinates
-clipPlane (Types.Camera3d camera) =
-    camera.clipPlane
-
-
-{-| Given a camera and a 2D screen point, calculate the corresponding 3D ray as
-an `Axis3d`. Conceptually, the ray will pass through the given point on the
-screen and will have direction equal to the viewing direction at that point.
+{-| Given a camera, a rectangle defining the shape and size of a screen, and a
+2D point within that screen, calculate the corresponding 3D ray as an `Axis3d`.
+Conceptually, the ray will pass through the given point on the screen and will
+have direction equal to the viewing direction at that point.
 
 For a perspective camera, the origin of the ray will be constant (always equal
 to the camera's eye point) and the direction will vary depending on the 2D
@@ -223,15 +186,8 @@ ray (Types.Camera3d camera) screen point =
             Axis3d.through origin (Viewpoint3d.viewDirection camera.viewpoint)
 
 
-{-| Get the [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
-of a camera;
-
-    Camera3d.viewMatrix camera
-
-is shorthand for
-
-    Viewpoint3d.viewMatrix (Camera3d.viewpoint camera)
-
+{-| Construct a WebGL view matrix for a given camera. Multiplying by this matrix
+transforms from world coordinates to camera (eye) coordinates.
 -}
 viewMatrix : Camera3d units coordinates -> Mat4
 viewMatrix camera =
@@ -239,62 +195,106 @@ viewMatrix camera =
 
 
 {-| Construct a WebGL model-view matrix given a camera and a `Frame3d` that
-defines the position and orientation of an object;
-
-    Camera3d.modelViewMatrix modelFrame camera
-
-is shorthand for
-
-    Viewpoint3d.modelViewMatrix
-        modelFrame
-        (Camera3d.viewpoint camera)
-
+defines the position and orientation of an object. Multiplying by this matrix
+transforms from local object coordinates (coordinates relative to the given
+frame) to camera (eye) coordinates.
 -}
 modelViewMatrix : Frame3d units coordinates defines -> Camera3d units coordinates -> Mat4
 modelViewMatrix modelFrame camera =
     Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
 
 
-{-| Construct a special `Vec4` containing values useful for settting up
-perspective and orthographic projection in WebGL. For a perspective camera,
-the entries are
-
-```
-clip depth
-screen aspect ratio
-1 / camera frustum slope
-0
-```
-
-For an orthographic camera, the entries are
-
-```
-clip depth
-screen aspect ratio
-0
--2 / camera viewport height
-```
-
-Currently used internally by `elm-3d-scene`.
-
+{-| Construct a WebGL projection matrix for a given camera, by supplying near
+and far clip distances as well as the aspect ratio (width over height) of the
+WebGL window being rendered to. Refer to the [above resources](#webgl-rendering)
+for details of how projection matrices are defined and used.
 -}
-projectionParameters : { screenAspectRatio : Float } -> Camera3d units coordinates -> Vec4
-projectionParameters { screenAspectRatio } (Types.Camera3d camera) =
+projectionMatrix :
+    { nearClipDistance : Quantity Float units
+    , farClipDistance : Quantity Float units
+    , aspectRatio : Float
+    }
+    -> Camera3d units coordinates
+    -> Mat4
+projectionMatrix { nearClipDistance, farClipDistance, aspectRatio } (Types.Camera3d camera) =
     let
         (Quantity n) =
-            camera.clipDepth
+            Quantity.abs nearClipDistance
+
+        (Quantity f) =
+            Quantity.abs farClipDistance
     in
     case camera.projection of
         Types.Perspective frustumSlope ->
-            Math.Vector4.vec4
-                n
-                screenAspectRatio
-                (1 / frustumSlope)
-                0
+            Math.Matrix4.fromRecord
+                { m11 = 1 / (aspectRatio * frustumSlope)
+                , m21 = 0
+                , m31 = 0
+                , m41 = 0
+                , m12 = 0
+                , m22 = 1 / frustumSlope
+                , m32 = 0
+                , m42 = 0
+                , m13 = 0
+                , m23 = 0
+                , m33 = -(f + n) / (f - n)
+                , m43 = -1
+                , m14 = 0
+                , m24 = 0
+                , m34 = -2 * f * n / (f - n)
+                , m44 = 0
+                }
 
         Types.Orthographic (Quantity viewportHeight) ->
-            Math.Vector4.vec4
-                n
-                screenAspectRatio
-                0
-                (-2 / viewportHeight)
+            Math.Matrix4.fromRecord
+                { m11 = 2 / (aspectRatio * viewportHeight)
+                , m21 = 0
+                , m31 = 0
+                , m41 = 0
+                , m12 = 0
+                , m22 = 2 / viewportHeight
+                , m32 = 0
+                , m42 = 0
+                , m13 = 0
+                , m23 = 0
+                , m33 = -2 / (f - n)
+                , m43 = 0
+                , m14 = 0
+                , m24 = 0
+                , m34 = -(f + n) / (f - n)
+                , m44 = 1
+                }
+
+
+{-| Construct a WebGL view-projection matrix for a given camera; this is the
+product of the projection and view matrices.
+-}
+viewProjectionMatrix :
+    { nearClipDistance : Quantity Float units
+    , farClipDistance : Quantity Float units
+    , aspectRatio : Float
+    }
+    -> Camera3d units coordinates
+    -> Mat4
+viewProjectionMatrix projectionParameters camera =
+    Math.Matrix4.mul
+        (projectionMatrix projectionParameters camera)
+        (viewMatrix camera)
+
+
+{-| Construct a WebGL model-view-projection matrix for a given camera; this is
+the product of the projection, view and model matrices.
+-}
+modelViewProjectionMatrix :
+    Frame3d units coordinates defines
+    ->
+        { nearClipDistance : Quantity Float units
+        , farClipDistance : Quantity Float units
+        , aspectRatio : Float
+        }
+    -> Camera3d units coordinates
+    -> Mat4
+modelViewProjectionMatrix modelFrame projectionParameters camera =
+    Math.Matrix4.mul
+        (projectionMatrix projectionParameters camera)
+        (modelViewMatrix modelFrame camera)

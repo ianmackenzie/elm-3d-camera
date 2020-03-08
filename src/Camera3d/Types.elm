@@ -29,7 +29,5 @@ type Projection units
 type Camera3d units coordinates
     = Camera3d
         { viewpoint : Viewpoint3d units coordinates
-        , clipDepth : Quantity Float units
-        , clipPlane : Plane3d units coordinates
         , projection : Projection units
         }
