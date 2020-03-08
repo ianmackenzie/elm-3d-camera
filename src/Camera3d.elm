@@ -205,32 +205,32 @@ modelViewMatrix modelFrame camera =
 
 
 {-| Construct a WebGL projection matrix for a given camera, by supplying near
-and far clip distances as well as the aspect ratio (width over height) of the
-WebGL window being rendered to. Refer to the [above resources](#webgl-rendering)
-for details of how projection matrices are defined and used.
+and far clip depths as well as the aspect ratio (width over height) of the WebGL
+window being rendered to. Refer to the [above resources](#webgl-rendering) for
+details of how projection matrices are defined and used.
 
-Using a value of infinity for `farClipDistance` is supported, and this often
-works well for perspective cameras, but for orthographic cameras an infinite
-far clip distance means that depth testing will not work. For things like line
-drawings this might be fine, but if you are depending on closer objects being
-properly drawn in front of further-away objects (at least when using an
-orthographic camera) then you will have to specify a finite far clip distance.
+Using a value of infinity for `farClipDepth` is supported, and this often works
+well for perspective cameras, but for orthographic cameras an infinite far clip
+depth means that depth testing will not work. For things like line drawings this
+might be fine, but if you are depending on closer objects being properly drawn
+in front of further-away objects (at least when using an orthographic camera)
+then you will have to specify a finite far clip depth.
 
 -}
 projectionMatrix :
-    { nearClipDistance : Quantity Float units
-    , farClipDistance : Quantity Float units
+    { nearClipDepth : Quantity Float units
+    , farClipDepth : Quantity Float units
     , aspectRatio : Float
     }
     -> Camera3d units coordinates
     -> Mat4
-projectionMatrix { nearClipDistance, farClipDistance, aspectRatio } (Types.Camera3d camera) =
+projectionMatrix { nearClipDepth, farClipDepth, aspectRatio } (Types.Camera3d camera) =
     let
         (Quantity n) =
-            Quantity.abs nearClipDistance
+            Quantity.abs nearClipDepth
 
         (Quantity f) =
-            Quantity.abs farClipDistance
+            Quantity.abs farClipDepth
     in
     case camera.projection of
         Types.Perspective frustumSlope ->
@@ -320,8 +320,8 @@ projectionMatrix { nearClipDistance, farClipDistance, aspectRatio } (Types.Camer
 product of the projection and view matrices.
 -}
 viewProjectionMatrix :
-    { nearClipDistance : Quantity Float units
-    , farClipDistance : Quantity Float units
+    { nearClipDepth : Quantity Float units
+    , farClipDepth : Quantity Float units
     , aspectRatio : Float
     }
     -> Camera3d units coordinates
@@ -338,8 +338,8 @@ the product of the projection, view and model matrices.
 modelViewProjectionMatrix :
     Frame3d units coordinates defines
     ->
-        { nearClipDistance : Quantity Float units
-        , farClipDistance : Quantity Float units
+        { nearClipDepth : Quantity Float units
+        , farClipDepth : Quantity Float units
         , aspectRatio : Float
         }
     -> Camera3d units coordinates

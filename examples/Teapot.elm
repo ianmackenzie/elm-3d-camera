@@ -264,8 +264,8 @@ entity mesh placementFrame windowSize =
             { projectionMatrix =
                 Camera3d.projectionMatrix
                     { aspectRatio = Quantity.ratio screenWidth screenHeight
-                    , nearClipDistance = modelUnits 1
-                    , farClipDistance = modelUnits 100
+                    , nearClipDepth = modelUnits 1
+                    , farClipDepth = modelUnits 100
                     }
                     camera
             , modelMatrix = Frame3d.toMat4 placementFrame

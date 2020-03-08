@@ -59,8 +59,8 @@ validPoint camera point =
 projectionParameters :
     Rectangle2d Pixels coordinates
     ->
-        { nearClipDistance : Quantity Float Meters
-        , farClipDistance : Quantity Float Meters
+        { nearClipDepth : Quantity Float Meters
+        , farClipDepth : Quantity Float Meters
         , aspectRatio : Float
         }
 projectionParameters screen =
@@ -68,8 +68,8 @@ projectionParameters screen =
         ( width, height ) =
             Rectangle2d.dimensions screen
     in
-    { nearClipDistance = Length.meters 0.1
-    , farClipDistance = Length.meters 100
+    { nearClipDepth = Length.meters 0.1
+    , farClipDepth = Length.meters 100
     , aspectRatio = Quantity.ratio width height
     }
 
