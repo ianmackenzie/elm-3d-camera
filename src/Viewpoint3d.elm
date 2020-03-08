@@ -234,9 +234,8 @@ yDirection (Types.Viewpoint3d frame) =
     Frame3d.yDirection frame
 
 
-{-| Get the [view matrix](http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#the-view-matrix)
-of a viewpoint. Multiplying by this matrix transforms from world coordinates to
-eye coordinates.
+{-| Construct a WebGL view matrix for a given viewpoint. Multiplying by this
+matrix transforms from world coordinates to eye coordinates.
 -}
 viewMatrix : Viewpoint3d units coordinates -> Mat4
 viewMatrix (Types.Viewpoint3d frame) =
@@ -244,19 +243,9 @@ viewMatrix (Types.Viewpoint3d frame) =
 
 
 {-| Construct a WebGL model-view matrix given a viewpoint and a `Frame3d` that
-defines the position and orientation of an object;
-
-    Viewpoint3d.modelViewMatrix modelFrame viewpoint
-
-is equivalent to
-
-    Matrix4.mul
-        (Viewpoint3d.viewMatrix viewpoint)
-        (Frame3d.toMat4 modelFrame)
-
-Multiplying by this matrix transforms from object coordinates to eye
-coordinates.
-
+defines the position and orientation of an object. Multiplying by this matrix
+transforms from local object coordinates (coordinates relative to the given
+frame) to eye coordinates.
 -}
 modelViewMatrix : Frame3d units coordinates defines -> Viewpoint3d units coordinates -> Mat4
 modelViewMatrix modelFrame (Types.Viewpoint3d frame) =
