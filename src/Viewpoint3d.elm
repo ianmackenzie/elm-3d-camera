@@ -175,19 +175,15 @@ orbit arguments =
         initialFrame =
             Frame3d.unsafe
                 { originPoint = arguments.focalPoint
-                , zDirection =
-                    SketchPlane3d.xDirection arguments.groundPlane
-                , xDirection =
-                    SketchPlane3d.yDirection arguments.groundPlane
-                , yDirection =
-                    SketchPlane3d.normalDirection arguments.groundPlane
+                , zDirection = SketchPlane3d.xDirection arguments.groundPlane
+                , xDirection = SketchPlane3d.yDirection arguments.groundPlane
+                , yDirection = SketchPlane3d.normalDirection arguments.groundPlane
                 }
 
         finalFrame =
             initialFrame
                 |> Frame3d.rotateAroundOwn Frame3d.yAxis arguments.azimuth
-                |> Frame3d.rotateAroundOwn Frame3d.xAxis
-                    (Quantity.negate arguments.elevation)
+                |> Frame3d.rotateAroundOwn Frame3d.xAxis (Quantity.negate arguments.elevation)
                 |> Frame3d.translateAlongOwn Frame3d.zAxis arguments.distance
     in
     Types.Viewpoint3d finalFrame
