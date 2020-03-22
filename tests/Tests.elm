@@ -250,6 +250,6 @@ suite =
                     projectedPoint =
                         Point3d.toScreenSpace camera screen point3d
                 in
-                projectedPoint |> Expect.point2d point2d
+                projectedPoint |> Expect.point2dWithin (Pixels.pixels 1.0e-10) point2d
             )
         ]

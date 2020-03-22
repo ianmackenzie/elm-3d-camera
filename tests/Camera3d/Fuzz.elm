@@ -34,7 +34,7 @@ camera =
                     }
             )
             viewpoint
-            (Fuzz.quantityRange (Angle.degrees 1) (Angle.degrees 179))
+            (Fuzz.quantityRange (Angle.degrees 10) (Angle.degrees 90))
         , Fuzz.map2
             (\viewpoint_ viewportHeight ->
                 Camera3d.orthographic
@@ -43,7 +43,7 @@ camera =
                     }
             )
             viewpoint
-            (Fuzz.quantityRange (Length.millimeters 1) (Length.meters 10))
+            (Fuzz.quantityRange (Length.centimeters 10) (Length.meters 5))
         ]
 
 
@@ -53,7 +53,7 @@ type ScreenCoordinates
 
 screenDimension : Fuzzer (Quantity Float Pixels)
 screenDimension =
-    Fuzz.quantityRange (Pixels.pixels 1) (Pixels.pixels 1000)
+    Fuzz.quantityRange (Pixels.pixels 100) (Pixels.pixels 1000)
 
 
 screen : Fuzzer (Rectangle2d Pixels ScreenCoordinates)
