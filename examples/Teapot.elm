@@ -5,6 +5,7 @@ import Axis2d
 import Axis3d exposing (Axis3d)
 import Browser
 import Browser.Dom
+import WebGL.Matrices as WebGL
 import Browser.Events
 import Camera3d exposing (Camera3d)
 import Direction2d exposing (Direction2d)
@@ -262,14 +263,13 @@ entity mesh placementFrame windowSize =
 
         uniforms =
             { projectionMatrix =
-                Camera3d.projectionMatrix
+                WebGL.projectionMatrix camera
                     { aspectRatio = Quantity.ratio screenWidth screenHeight
                     , nearClipDepth = modelUnits 1
                     , farClipDepth = modelUnits 100
                     }
-                    camera
-            , modelMatrix = Frame3d.toMat4 placementFrame
-            , viewMatrix = Camera3d.viewMatrix camera
+            , modelMatrix = WebGL.modelMatrix placementFrame
+            , viewMatrix = WebGL.viewMatrix (Camera3d.viewpoint camera)
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = faceColor
             }

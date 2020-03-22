@@ -15,7 +15,7 @@ import Rectangle2d exposing (Rectangle2d)
 
 
 {-| Find the 'depth' of a point relative to a camera. This is the signed
-distance of the point from a plane with
+distance of the point from a plane with:
 
   - origin point equal to the camera's eye point
   - normal direction equal to the camera's viewing direction

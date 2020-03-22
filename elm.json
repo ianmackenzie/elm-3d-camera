@@ -9,7 +9,8 @@
         "Viewpoint3d",
         "Point3d.Projection",
         "LineSegment3d.Projection",
-        "Triangle3d.Projection"
+        "Triangle3d.Projection",
+        "WebGL.Matrices"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

@@ -2,7 +2,6 @@ module Viewpoint3d exposing
     ( Viewpoint3d
     , lookAt, orbit
     , eyePoint, viewDirection, viewPlane, xDirection, yDirection
-    , viewMatrix, modelViewMatrix
     )
 
 {-| A `Viewpoint3d` represents the position and orientation of a camera in 3D.
@@ -18,11 +17,6 @@ module Viewpoint3d exposing
 # Properties
 
 @docs eyePoint, viewDirection, viewPlane, xDirection, yDirection
-
-
-# Matrices
-
-@docs viewMatrix, modelViewMatrix
 
 -}
 
@@ -228,21 +222,3 @@ xDirection (Types.Viewpoint3d frame) =
 yDirection : Viewpoint3d units coordinates -> Direction3d coordinates
 yDirection (Types.Viewpoint3d frame) =
     Frame3d.yDirection frame
-
-
-{-| Construct a WebGL view matrix for a given viewpoint. Multiplying by this
-matrix transforms from world coordinates to eye coordinates.
--}
-viewMatrix : Viewpoint3d units coordinates -> Mat4
-viewMatrix (Types.Viewpoint3d frame) =
-    Frame3d.toMat4 (Frame3d.atOrigin |> Frame3d.relativeTo frame)
-
-
-{-| Construct a WebGL model-view matrix given a viewpoint and a `Frame3d` that
-defines the position and orientation of an object. Multiplying by this matrix
-transforms from local object coordinates (coordinates relative to the given
-frame) to eye coordinates.
--}
-modelViewMatrix : Frame3d units coordinates defines -> Viewpoint3d units coordinates -> Mat4
-modelViewMatrix modelFrame (Types.Viewpoint3d frame) =
-    Frame3d.toMat4 (modelFrame |> Frame3d.relativeTo frame)

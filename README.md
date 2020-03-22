@@ -1,6 +1,6 @@
 # elm-3d-camera
 
-This package is provides convenient ways to define and use perspective and
+This package provides convenient ways to define and use perspective and
 orthographic cameras in 3D. It is based on [`elm-geometry`](http://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest)
 and has two main goals:
 
@@ -17,6 +17,10 @@ To define a camera, you first create a viewpoint which represents the position
 and orientation of the camera:
 
 ```elm
+import Viewpoint3d
+import Point3d
+import Direction3d
+
 cameraViewpoint =
     Viewpoint3d.lookAt
         { eyePoint = Point3d.meters 10 0 5
@@ -29,6 +33,10 @@ You can then create either a perspective or orthographic camera from the
 viewpoint:
 
 ```elm
+import Camera3d
+import Angle
+import Length
+
 perspectiveCamera =
     Camera3d.perspective
         { viewpoint = cameraViewpoint
@@ -48,16 +56,17 @@ Once you have a camera, you can use it to get WebGL view and projection
 matrices:
 
 ```elm
+import WebGL.Matrices as WebGL
+
 viewMatrix =
-    Camera.viewMatrix camera
+    WebGL.viewMatrix camera
 
 projectionMatrix =
-    Camera.projectionMatrix
+    WebGL.projectionMatrix camera
         { nearClipDepth = Length.meters 0.1
         , farClipDepth = Length.meters 100
         , aspectRatio = 16 / 9
         }
-        camera
 ```
 
 ## Projection to screen space

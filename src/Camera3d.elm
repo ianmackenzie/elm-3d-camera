@@ -3,7 +3,6 @@ module Camera3d exposing
     , perspective, orthographic
     , viewpoint
     , ray
-    , viewMatrix, modelViewMatrix, projectionMatrix, viewProjectionMatrix, modelViewProjectionMatrix
     )
 
 {-| A `Camera3d` is a perspective or orthographic camera in 3D, encapsulating
@@ -31,18 +30,6 @@ screen the camera renders to. This module contains functions for:
 # Ray casting
 
 @docs ray
-
-
-# WebGL rendering
-
-These matrices can be used for rendering 3D [WebGL](https://package.elm-lang.org/packages/elm-explorations/webgl/latest/)
-scenes. For in-depth explanations of how these matrices are used, check out
-
-  - <https://learnopengl.com/Getting-started/Coordinate-Systems>
-  - <http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/>
-  - <http://www.songho.ca/opengl/gl_transform.html>
-
-@docs viewMatrix, modelViewMatrix, projectionMatrix, viewProjectionMatrix, modelViewProjectionMatrix
 
 -}
 
@@ -95,9 +82,9 @@ perspective arguments =
         }
 
 
-{-| Create an orthographic camera from a viewpoint, a clip depth and the height
-of the orthographic viewport: this is the height in 3D world units of the
-section of the model to be rendered.
+{-| Create an orthographic camera from a viewpoint and the height of the
+orthographic viewport: this is the height in 3D world units of the section of
+the model to be rendered.
 
     orthographicCamera =
         Camera3d.orthographic
@@ -184,167 +171,3 @@ ray (Types.Camera3d camera) screen point =
                         zero
             in
             Axis3d.through origin (Viewpoint3d.viewDirection camera.viewpoint)
-
-
-{-| Construct a WebGL view matrix for a given camera. Multiplying by this matrix
-transforms from world coordinates to camera (eye) coordinates.
--}
-viewMatrix : Camera3d units coordinates -> Mat4
-viewMatrix camera =
-    Viewpoint3d.viewMatrix (viewpoint camera)
-
-
-{-| Construct a WebGL model-view matrix given a camera and a `Frame3d` that
-defines the position and orientation of an object. Multiplying by this matrix
-transforms from local object coordinates (coordinates relative to the given
-frame) to camera (eye) coordinates.
--}
-modelViewMatrix : Frame3d units coordinates defines -> Camera3d units coordinates -> Mat4
-modelViewMatrix modelFrame camera =
-    Viewpoint3d.modelViewMatrix modelFrame (viewpoint camera)
-
-
-{-| Construct a WebGL projection matrix for a given camera, by supplying near
-and far clip depths as well as the aspect ratio (width over height) of the WebGL
-window being rendered to. Refer to the [above resources](#webgl-rendering) for
-details of how projection matrices are defined and used.
-
-Using a value of infinity for `farClipDepth` is supported, and this often works
-well for perspective cameras, but for orthographic cameras an infinite far clip
-depth means that depth testing will not work. For things like line drawings this
-might be fine, but if you are depending on closer objects being properly drawn
-in front of further-away objects (at least when using an orthographic camera)
-then you will have to specify a finite far clip depth.
-
--}
-projectionMatrix :
-    { nearClipDepth : Quantity Float units
-    , farClipDepth : Quantity Float units
-    , aspectRatio : Float
-    }
-    -> Camera3d units coordinates
-    -> Mat4
-projectionMatrix { nearClipDepth, farClipDepth, aspectRatio } (Types.Camera3d camera) =
-    let
-        (Quantity n) =
-            Quantity.abs nearClipDepth
-
-        (Quantity f) =
-            Quantity.abs farClipDepth
-    in
-    case camera.projection of
-        Types.Perspective frustumSlope ->
-            if isInfinite f then
-                Math.Matrix4.fromRecord
-                    { m11 = 1 / (aspectRatio * frustumSlope)
-                    , m21 = 0
-                    , m31 = 0
-                    , m41 = 0
-                    , m12 = 0
-                    , m22 = 1 / frustumSlope
-                    , m32 = 0
-                    , m42 = 0
-                    , m13 = 0
-                    , m23 = 0
-                    , m33 = -1
-                    , m43 = -1
-                    , m14 = 0
-                    , m24 = 0
-                    , m34 = -2 * n
-                    , m44 = 0
-                    }
-
-            else
-                Math.Matrix4.fromRecord
-                    { m11 = 1 / (aspectRatio * frustumSlope)
-                    , m21 = 0
-                    , m31 = 0
-                    , m41 = 0
-                    , m12 = 0
-                    , m22 = 1 / frustumSlope
-                    , m32 = 0
-                    , m42 = 0
-                    , m13 = 0
-                    , m23 = 0
-                    , m33 = -(f + n) / (f - n)
-                    , m43 = -1
-                    , m14 = 0
-                    , m24 = 0
-                    , m34 = -2 * f * n / (f - n)
-                    , m44 = 0
-                    }
-
-        Types.Orthographic (Quantity viewportHeight) ->
-            if isInfinite f then
-                Math.Matrix4.fromRecord
-                    { m11 = 2 / (aspectRatio * viewportHeight)
-                    , m21 = 0
-                    , m31 = 0
-                    , m41 = 0
-                    , m12 = 0
-                    , m22 = 2 / viewportHeight
-                    , m32 = 0
-                    , m42 = 0
-                    , m13 = 0
-                    , m23 = 0
-                    , m33 = 0
-                    , m43 = 0
-                    , m14 = 0
-                    , m24 = 0
-                    , m34 = -1
-                    , m44 = 1
-                    }
-
-            else
-                Math.Matrix4.fromRecord
-                    { m11 = 2 / (aspectRatio * viewportHeight)
-                    , m21 = 0
-                    , m31 = 0
-                    , m41 = 0
-                    , m12 = 0
-                    , m22 = 2 / viewportHeight
-                    , m32 = 0
-                    , m42 = 0
-                    , m13 = 0
-                    , m23 = 0
-                    , m33 = -2 / (f - n)
-                    , m43 = 0
-                    , m14 = 0
-                    , m24 = 0
-                    , m34 = -(f + n) / (f - n)
-                    , m44 = 1
-                    }
-
-
-{-| Construct a WebGL view-projection matrix for a given camera; this is the
-product of the projection and view matrices.
--}
-viewProjectionMatrix :
-    { nearClipDepth : Quantity Float units
-    , farClipDepth : Quantity Float units
-    , aspectRatio : Float
-    }
-    -> Camera3d units coordinates
-    -> Mat4
-viewProjectionMatrix projectionParameters camera =
-    Math.Matrix4.mul
-        (projectionMatrix projectionParameters camera)
-        (viewMatrix camera)
-
-
-{-| Construct a WebGL model-view-projection matrix for a given camera; this is
-the product of the projection, view and model matrices.
--}
-modelViewProjectionMatrix :
-    Frame3d units coordinates defines
-    ->
-        { nearClipDepth : Quantity Float units
-        , farClipDepth : Quantity Float units
-        , aspectRatio : Float
-        }
-    -> Camera3d units coordinates
-    -> Mat4
-modelViewProjectionMatrix modelFrame projectionParameters camera =
-    Math.Matrix4.mul
-        (projectionMatrix projectionParameters camera)
-        (modelViewMatrix modelFrame camera)

@@ -18,6 +18,7 @@ import Rectangle2d exposing (Rectangle2d)
 import SketchPlane3d
 import Test exposing (Test)
 import Viewpoint3d
+import WebGL.Matrices as WebGL
 
 
 type NdcCoordinates
@@ -122,12 +123,11 @@ suite =
                             Point3d.toScreenSpace camera screen point
 
                         viewMatrix =
-                            Camera3d.viewMatrix camera
+                            WebGL.viewMatrix (Camera3d.viewpoint camera)
 
                         projectionMatrix =
-                            Camera3d.projectionMatrix
+                            WebGL.projectionMatrix camera
                                 (projectionParameters screen)
-                                camera
 
                         secondPoint =
                             point
@@ -149,9 +149,8 @@ suite =
                             Point3d.toScreenSpace camera screen point
 
                         viewProjectionMatrix =
-                            Camera3d.viewProjectionMatrix
+                            WebGL.viewProjectionMatrix camera
                                 (projectionParameters screen)
-                                camera
 
                         secondPoint =
                             point
@@ -178,12 +177,12 @@ suite =
                             Point3d.toScreenSpace camera screen globalPoint
 
                         modelViewMatrix =
-                            Camera3d.modelViewMatrix modelFrame camera
+                            WebGL.modelViewMatrix modelFrame
+                                (Camera3d.viewpoint camera)
 
                         projectionMatrix =
-                            Camera3d.projectionMatrix
+                            WebGL.projectionMatrix camera
                                 (projectionParameters screen)
-                                camera
 
                         secondPoint =
                             point
@@ -208,18 +207,18 @@ suite =
                 if validPoint camera globalPoint then
                     let
                         modelViewMatrix =
-                            Camera3d.modelViewMatrix modelFrame camera
+                            WebGL.modelViewMatrix modelFrame
+                                (Camera3d.viewpoint camera)
 
                         projectionMatrix =
-                            Camera3d.projectionMatrix
+                            WebGL.projectionMatrix camera
                                 (projectionParameters screen)
-                                camera
 
                         modelViewProjectionMatrix =
-                            Camera3d.modelViewProjectionMatrix
+                            WebGL.modelViewProjectionMatrix
                                 modelFrame
-                                (projectionParameters screen)
                                 camera
+                                (projectionParameters screen)
 
                         firstPoint =
                             point
