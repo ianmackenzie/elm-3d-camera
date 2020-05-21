@@ -1,6 +1,6 @@
 module Viewpoint3d exposing
     ( Viewpoint3d
-    , lookAt, orbit
+    , lookAt, orbit, orbitZ, isometricElevation, isometric
     , eyePoint, viewDirection, viewPlane, xDirection, yDirection
     )
 
@@ -11,7 +11,7 @@ module Viewpoint3d exposing
 
 # Constructors
 
-@docs lookAt, orbit
+@docs lookAt, orbit, orbitZ, isometricElevation, isometric
 
 
 # Properties
@@ -181,6 +181,64 @@ orbit arguments =
                 |> Frame3d.translateAlongOwn Frame3d.zAxis arguments.distance
     in
     Types.Viewpoint3d finalFrame
+
+
+{-| A special case of `orbit` for orbiting around a Z axis through the given
+focal point. This corresponds to setting `groundPlane` to `SketchPlane3d.xy`,
+so azimuth is measured from the X axis towards the Y axis and elevation is
+measured up from the XY plane. Not related to the [classic soft drink](https://en.wikipedia.org/wiki/Orbitz_%28drink%29).
+-}
+orbitZ :
+    { focalPoint : Point3d units coordinates
+    , azimuth : Angle
+    , elevation : Angle
+    , distance : Quantity Float units
+    }
+    -> Viewpoint3d units coordinates
+orbitZ { focalPoint, azimuth, elevation, distance } =
+    orbit
+        { focalPoint = focalPoint
+        , groundPlane = SketchPlane3d.xy
+        , azimuth = azimuth
+        , elevation = elevation
+        , distance = distance
+        }
+
+
+{-| Not actually a constructor, but a useful value (approximately 35.26 degrees)
+to use when constructing viewpoints using `orbit` or `orbitZ`: using this as the
+`elevation` value will result in an [isometric](#isometric) viewpoint if
+`azimuth` is set to 45 degrees. Said another way, this is the elevation angle of
+a vector with components (1, 1, 1).
+-}
+isometricElevation : Angle
+isometricElevation =
+    Angle.atan2 (Quantity.float 1) (Quantity.float (sqrt 2))
+
+
+{-| Construct a viewpoint looking at the given focal point, the given distance
+away, such that a set of XYZ axes at that point will appear to have:
+
+  - Z straight up
+  - X pointing to the left and 30 degrees down
+  - Y pointing to the right and 30 degrees down
+
+You can combine `Viewpoint3d.isometric` with [`Camera3d.orthographic`](Camera3d#orthographic)
+to achieve [isometric projection](https://en.wikipedia.org/wiki/Isometric_projection).
+
+-}
+isometric :
+    { focalPoint : Point3d units coordinates
+    , distance : Quantity Float units
+    }
+    -> Viewpoint3d units coordinates
+isometric { focalPoint, distance } =
+    orbitZ
+        { focalPoint = focalPoint
+        , azimuth = Angle.degrees 45
+        , elevation = isometricElevation
+        , distance = distance
+        }
 
 
 {-| Get the actual eye point of a viewpoint.

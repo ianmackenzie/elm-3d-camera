@@ -99,9 +99,8 @@ difficult to do with WebGL):
 
 ## Roadmap
 
-Several more features are planned:
+A few more features are planned:
 
-  - More `Viewpoint3d` constructors other than just `lookAt` and `orbit`
   - More 3D-to-2D projections (directions, axes)
   - Construction of 3D cut planes from 2D on-screen lines
 
