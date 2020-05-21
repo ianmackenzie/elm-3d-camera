@@ -3,7 +3,7 @@
     "name": "ianmackenzie/elm-3d-camera",
     "summary": "Camera type for 3D rendering and projection",
     "license": "MPL-2.0",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "exposed-modules": [
         "Camera3d",
         "Viewpoint3d",
@@ -22,8 +22,8 @@
     },
     "test-dependencies": {
         "elm/html": "1.0.0 <= v < 2.0.0",
+        "elm/virtual-dom": "1.0.2 <= v < 2.0.0",
         "elm-explorations/test": "1.2.2 <= v < 2.0.0",
-        "ianmackenzie/elm-geometry-test": "1.0.0 <= v < 2.0.0",
-        "elm/virtual-dom": "1.0.2 <= v < 2.0.0"
+        "ianmackenzie/elm-geometry-test": "1.0.0 <= v < 2.0.0"
     }
 }
