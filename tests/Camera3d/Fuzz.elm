@@ -8,7 +8,6 @@ import Geometry.Fuzz as Fuzz
 import Length exposing (Meters)
 import Pixels exposing (Pixels)
 import Point2d
-import Point3d exposing (Point3d)
 import Quantity exposing (Quantity)
 import Rectangle2d exposing (Rectangle2d)
 import Viewpoint3d exposing (Viewpoint3d)

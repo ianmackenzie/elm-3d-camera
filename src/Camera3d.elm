@@ -36,16 +36,12 @@ screen the camera renders to. This module contains functions for:
 import Angle exposing (Angle)
 import Axis3d exposing (Axis3d)
 import Camera3d.Types as Types
-import Direction3d exposing (Direction3d)
-import Frame3d exposing (Frame3d)
-import Math.Matrix4 exposing (Mat4)
-import Math.Vector4 exposing (Vec4)
-import Plane3d exposing (Plane3d)
+import Direction3d
 import Point2d exposing (Point2d)
-import Point3d exposing (Point3d)
+import Point3d
 import Quantity exposing (Quantity(..), zero)
 import Rectangle2d exposing (Rectangle2d)
-import Vector3d exposing (Vector3d)
+import Vector3d
 import Viewpoint3d exposing (Viewpoint3d)
 
 
@@ -134,7 +130,7 @@ ray (Types.Camera3d camera) screen point =
         (Types.Viewpoint3d viewpointFrame) =
             camera.viewpoint
 
-        ( screenWidth, screenHeight ) =
+        ( _, screenHeight ) =
             Rectangle2d.dimensions screen
 
         screenX =

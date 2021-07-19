@@ -2,7 +2,7 @@ module Tests exposing (suite)
 
 import Camera3d exposing (Camera3d)
 import Camera3d.Fuzz as Fuzz exposing (ScreenCoordinates, WorldCoordinates)
-import Expect exposing (Expectation)
+import Expect
 import Fuzz exposing (Fuzzer)
 import Geometry.Expect as Expect
 import Geometry.Fuzz as Fuzz
@@ -15,7 +15,6 @@ import Point3d exposing (Point3d)
 import Point3d.Projection as Point3d
 import Quantity exposing (Quantity, Unitless)
 import Rectangle2d exposing (Rectangle2d)
-import SketchPlane3d
 import Test exposing (Test)
 import Viewpoint3d
 import WebGL.Matrices as WebGL

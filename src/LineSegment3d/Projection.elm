@@ -7,14 +7,10 @@ module LineSegment3d.Projection exposing (toScreenSpace)
 -}
 
 import Camera3d exposing (Camera3d)
-import Camera3d.Types as Types
-import Frame3d
 import LineSegment2d exposing (LineSegment2d)
 import LineSegment3d exposing (LineSegment3d)
-import Plane3d
 import Point3d
 import Point3d.Projection as Point3d
-import Quantity exposing (zero)
 import Rectangle2d exposing (Rectangle2d)
 
 

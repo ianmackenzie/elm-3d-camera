@@ -5,16 +5,11 @@ module Camera3d.Types exposing
     )
 
 import Frame3d exposing (Frame3d)
-import Plane3d exposing (Plane3d)
 import Quantity exposing (Quantity)
 
 
 type EyeCoordinates
     = EyeCoordinates
-
-
-type ViewPlaneCoordinates
-    = ViewPlaneCoordinates
 
 
 type Viewpoint3d units coordinates

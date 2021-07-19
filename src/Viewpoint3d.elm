@@ -23,13 +23,12 @@ module Viewpoint3d exposing
 import Angle exposing (Angle)
 import Camera3d.Types as Types
 import Direction3d exposing (Direction3d)
-import Frame3d exposing (Frame3d)
+import Frame3d
 import Geometry.Interop.LinearAlgebra.Frame3d as Frame3d
-import Math.Matrix4 exposing (Mat4)
 import Point3d exposing (Point3d)
 import Quantity exposing (Quantity)
 import SketchPlane3d exposing (SketchPlane3d)
-import Vector3d exposing (Vector3d)
+import Vector3d
 
 
 {-| -}

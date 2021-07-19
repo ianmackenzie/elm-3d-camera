@@ -7,10 +7,6 @@ module Triangle3d.Projection exposing (toScreenSpace, isFrontFacing)
 -}
 
 import Camera3d exposing (Camera3d)
-import Camera3d.Types as Types
-import Frame3d
-import LineSegment3d
-import Plane3d
 import Point3d
 import Point3d.Projection as Point3d
 import Quantity exposing (zero)
