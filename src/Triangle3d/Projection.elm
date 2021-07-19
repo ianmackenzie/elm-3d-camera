@@ -9,7 +9,7 @@ module Triangle3d.Projection exposing (toScreenSpace, isFrontFacing)
 import Camera3d exposing (Camera3d)
 import Point3d
 import Point3d.Projection as Point3d
-import Quantity exposing (zero)
+import Quantity
 import Rectangle2d exposing (Rectangle2d)
 import Triangle2d exposing (Triangle2d)
 import Triangle3d exposing (Triangle3d)
@@ -58,7 +58,7 @@ isFrontFacing camera triangle =
             in
             Vector3d.from p1 eyePoint
                 |> Vector3d.componentIn normalDirection
-                |> Quantity.greaterThan zero
+                |> Quantity.greaterThanZero
 
         Nothing ->
             False
