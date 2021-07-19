@@ -39,7 +39,7 @@ import Camera3d.Types as Types
 import Direction3d
 import Point2d exposing (Point2d)
 import Point3d
-import Quantity exposing (Quantity(..), zero)
+import Quantity exposing (Quantity)
 import Rectangle2d exposing (Rectangle2d)
 import Vector3d
 import Viewpoint3d exposing (Viewpoint3d)
@@ -164,6 +164,6 @@ ray (Types.Camera3d camera) screen point =
                     Point3d.xyzIn viewpointFrame
                         (screenX |> Quantity.at resolution)
                         (screenY |> Quantity.at resolution)
-                        zero
+                        Quantity.zero
             in
             Axis3d.through origin (Viewpoint3d.viewDirection camera.viewpoint)
