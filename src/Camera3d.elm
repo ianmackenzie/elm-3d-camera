@@ -1,30 +1,29 @@
 module Camera3d exposing
-    ( Camera3d
-    , perspective, orthographic
-    , viewpoint
+    ( Camera3d, Projection(..), FieldOfView, angle, height
+    , lookAt, orbit, orbitZ, isometric, isometricElevation, with
+    , eyePoint, viewDirection, viewPlane, frame, focalDistance, projection, fovAngle, fovHeight
     , ray
     )
 
-{-| A `Camera3d` is a perspective or orthographic camera in 3D, encapsulating
-the camera's viewpoint and projection matrix as well as the dimensions of the
-screen the camera renders to. This module contains functions for:
+{-| A `Camera3d` is a perspective or orthographic camera in 3D space. This
+module contains functions for:
 
   - Defining perspective and orthographic cameras
   - Obtaining view and projection matrices for a given camera, which can then be
     used for WebGL rendering
   - Using cameras to project 3D geometry to 2D screen space
 
-@docs Camera3d
+@docs Camera3d, Projection, FieldOfView, angle, height
 
 
 # Constructors
 
-@docs perspective, orthographic
+@docs lookAt, orbit, orbitZ, isometric, isometricElevation, with
 
 
 # Properties
 
-@docs viewpoint
+@docs eyePoint, viewDirection, viewPlane, frame, focalDistance, projection, fovAngle, fovHeight
 
 
 # Ray casting
@@ -35,77 +34,395 @@ screen the camera renders to. This module contains functions for:
 
 import Angle exposing (Angle)
 import Axis3d exposing (Axis3d)
-import Camera3d.Types as Types
-import Direction3d
+import Direction3d exposing (Direction3d)
+import Frame3d exposing (Frame3d)
 import Point2d exposing (Point2d)
-import Point3d
+import Point3d exposing (Point3d)
 import Quantity exposing (Quantity)
 import Rectangle2d exposing (Rectangle2d)
+import SketchPlane3d exposing (SketchPlane3d)
 import Vector3d
-import Viewpoint3d exposing (Viewpoint3d)
 
 
-{-| -}
-type alias Camera3d units coordinates =
-    Types.Camera3d units coordinates
+{-| A camera in 3D space.
+-}
+type Camera3d units coordinates
+    = Camera3d
+        { frame : Frame3d units coordinates { defines : () }
+        , focalDistance : Quantity Float units
+        , projection : Projection
+        , fovAngle : Angle
+        }
 
 
-{-| Create a perspective camera from a viewpoint and a vertical field of view.
+{-| Defines whether a camera uses [perspective or orthographic projection](https://en.wikipedia.org/wiki/3D_projection).
+-}
+type Projection
+    = Perspective
+    | Orthographic
 
-    perspectiveCamera =
-        Camera3d.perspective
-            { viewpoint = cameraViewpoint
-            , verticalFieldOfView = Angle.degrees 30
-            }
+
+{-| Defines the vertical [field of view](https://en.wikipedia.org/wiki/Field_of_view) of a camera.
+This is usually defined as an angle, but can also be defined as a height:
+
+  - When using perspective projection, field of view is defined as an angle but that angle can be
+    computed given a focal distance and the desired object height to be visible at that focal
+    distance.
+  - Conversely, when using orthographic projection, field of view is defined as a height but that
+    height can be computed given a focal distance and the angular field of view at that focal
+    distance.
+
+As a result, this module allows you to specify field of view as either an angle or a height for
+either perspective or orthographic cameras, and any necessary conversions will be done
+automatically.
 
 -}
-perspective :
-    { viewpoint : Viewpoint3d units coordinates
-    , verticalFieldOfView : Angle
+type FieldOfView units
+    = Angle Angle
+    | Height (Quantity Float units)
+
+
+{-| Specify vertical field of view as an angle.
+-}
+angle : Angle -> FieldOfView units
+angle givenAngle =
+    Angle givenAngle
+
+
+{-| Specify vertical field of view as a height.
+-}
+height : Quantity Float units -> FieldOfView units
+height givenHeight =
+    Height givenHeight
+
+
+{-| Construct a camera directly from:
+
+  - Its view plane, which is a `SketchPlane3d` conceptually [aligned with the screen](#viewPlane)
+  - The focal distance of the camera (used to convert between angle-based and height-based field of
+    view as necessary). This is generally the distance from the camera's eye point to the object
+    being focused on (which is also often the center of rotation for the camera).
+  - What kind of projection the camera should use
+  - What field of view the camera should use
+
+This corresponds most directly to the internal representation of a `Camera3d` and is the most
+flexible, but usually also the most akward to use.
+
+-}
+with :
+    { viewPlane : SketchPlane3d units coordinates defines
+    , focalDistance : Quantity Float units
+    , projection : Projection
+    , fov : FieldOfView units
     }
     -> Camera3d units coordinates
-perspective arguments =
+with given =
+    Camera3d
+        { frame = SketchPlane3d.toFrame given.viewPlane
+        , focalDistance = given.focalDistance
+        , projection = given.projection
+        , fovAngle =
+            case given.fov of
+                Angle givenAngle ->
+                    givenAngle
+
+                Height givenHeight ->
+                    Quantity.twice (Angle.atan2 (Quantity.half givenHeight) given.focalDistance)
+        }
+
+
+{-| Construct a `Camera3d` at the given eye point looking towards the given
+focal point, with the given global up direction (which will typically be
+`Direction3d.positiveZ` or `Direction3d.positiveY`). The focal distance will
+be computed as the distance from the eye point to the forcal point. For
+example, to construct a camera at the point (10, 0, 5) looking towards the
+origin:
+
+    camera =
+        Camera3d.lookAt
+            { eyePoint = Point3d.meters 10 0 5
+            , focalPoint = Point3d.origin
+            , upDirection = Direction3d.positiveZ
+            , projection = Camera3d.Perspective
+            , fov = Camera3d.angle (Angle.degrees 30)
+            }
+
+    Camera3d.eyePoint camera
+    --> Point3d.meters 10 0 5
+
+    Camera3d.viewDirection camera
+    --> Direction3d.xz (Angle.degrees -153.43)
+
+That is likely all you need to know but if you are interested in the details and
+corner cases, read on!
+
+The view direction of the returned camera will point from the eye point to
+the focal point. The Y direction will be chosen to be as close to the global up
+direction as possible (the camera will not have any 'roll') and the X
+direction will point to the right.
+
+If the direction from the eye point to the focal point is parallel to the global
+up direction (that is, the camera represents looking straight up or straight
+down) then the X and Y directions will be chosen arbitrarily.
+
+If the given eye point and focal point are coincident (so that there is no well-
+defined view direction), then the returned camera will have its Y direction set
+to the global up direction and its X and view directions will be chosen
+arbitrarily.
+
+-}
+lookAt :
+    { eyePoint : Point3d units coordinates
+    , focalPoint : Point3d units coordinates
+    , upDirection : Direction3d coordinates
+    , projection : Projection
+    , fov : FieldOfView units
+    }
+    -> Camera3d units coordinates
+lookAt given =
     let
-        halfFieldOfView =
-            Quantity.half (Quantity.abs arguments.verticalFieldOfView)
+        zVector =
+            Vector3d.from given.focalPoint given.eyePoint
 
-        frustumSlope =
-            Angle.tan halfFieldOfView
+        yVector =
+            Direction3d.toVector given.upDirection
+
+        xVector =
+            yVector |> Vector3d.cross zVector
+
+        computedViewPlane =
+            case Direction3d.orthonormalize zVector yVector xVector of
+                Just ( normalizedZDirection, normalizedYDirection, normalizedXDirection ) ->
+                    SketchPlane3d.unsafe
+                        { originPoint = given.eyePoint
+                        , xDirection = normalizedXDirection
+                        , yDirection = normalizedYDirection
+                        }
+
+                Nothing ->
+                    case Vector3d.direction zVector of
+                        Just zDirection ->
+                            -- The view vector must be parallel to the up direction,
+                            -- since it is non-zero and therefore otherwise would have
+                            -- resulted in a valid orthonormalization; therefore, choose
+                            -- an arbitrary 'up' direction that is perpendicular to the
+                            -- view direction
+                            SketchPlane3d.withNormalDirection zDirection given.eyePoint
+
+                        Nothing ->
+                            -- The view vector is zero (the eye point and focal point
+                            -- are coincident), so construct an arbitrary frame with the
+                            -- given up direction
+                            let
+                                ( arbitraryZDirection, arbitraryXDirection ) =
+                                    Direction3d.perpendicularBasis given.upDirection
+                            in
+                            SketchPlane3d.unsafe
+                                { originPoint = given.eyePoint
+                                , xDirection = arbitraryXDirection
+                                , yDirection = given.upDirection
+                                }
     in
-    Types.Camera3d
-        { viewpoint = arguments.viewpoint
-        , projection = Types.Perspective frustumSlope
+    with
+        { viewPlane = computedViewPlane
+        , focalDistance = Point3d.distanceFrom given.eyePoint given.focalPoint
+        , projection = given.projection
+        , fov = given.fov
         }
 
 
-{-| Create an orthographic camera from a viewpoint and the height of the
-orthographic viewport: this is the height in 3D world units of the section of
-the model to be rendered.
+{-| Construct a `Camera3d` looking at the given focal point, the given
+distance away. The direction from the focal point to the eye point is defined by
+the given azimuth and elevation angles, which are with respect to the given
+ground plane (the position of the ground plane does not matter, only its
+orientation). For example,
 
-    orthographicCamera =
-        Camera3d.orthographic
-            { viewpoint = cameraViewpoint
-            , viewportHeight = Length.meters 5
-            }
+    Camera3d.orbit
+        { focalPoint = Point3d.meters 0 0 1
+        , groundPlane = SketchPlane3d.xy
+        , azimuth = Angle.degrees 0
+        , elevation = Angle.degrees 45
+        , distance = Length.meters 10
+        , projection = Camera3d.Perspective
+        , fov = Camera3d.angle (Angle.degrees 30)
+        }
+
+is equivalent to
+
+    Camera3d.lookAt
+        { focalPoint = Point3d.meters 0 0 1
+        , eyePoint = Point3d.meters 7.071 0 7.071
+        , upDirection = Direction3d.z
+        , projection = Camera3d.Perspective
+        , fov = Camera3d.angle (Angle.degrees 30)
+        }
+
+As the name suggests, `Camera3d.orbit` is useful for making orbiting cameras;
+you can orbit around the focal point by changing just the azimuth, and rotate
+up and down by changing just the elevation.
 
 -}
-orthographic :
-    { viewpoint : Viewpoint3d units coordinates
-    , viewportHeight : Quantity Float units
+orbit :
+    { focalPoint : Point3d units coordinates
+    , groundPlane : SketchPlane3d units coordinates defines
+    , azimuth : Angle
+    , elevation : Angle
+    , distance : Quantity Float units
+    , projection : Projection
+    , fov : FieldOfView units
     }
     -> Camera3d units coordinates
-orthographic arguments =
-    Types.Camera3d
-        { viewpoint = arguments.viewpoint
-        , projection = Types.Orthographic (Quantity.abs arguments.viewportHeight)
+orbit given =
+    let
+        computedViewPlane =
+            SketchPlane3d.toFrame given.groundPlane
+                |> Frame3d.moveTo given.focalPoint
+                |> Frame3d.rotateAroundOwn Frame3d.zAxis given.azimuth
+                |> Frame3d.rotateAroundOwn Frame3d.yAxis (Quantity.negate given.elevation)
+                |> Frame3d.translateAlongOwn Frame3d.xAxis given.distance
+                |> Frame3d.yzSketchPlane
+    in
+    with
+        { viewPlane = computedViewPlane
+        , focalDistance = given.distance
+        , projection = given.projection
+        , fov = given.fov
         }
 
 
-{-| Get the viewpoint defining the position and orientation of a camera.
+{-| A special case of `orbit` for orbiting around a Z axis through the given
+focal point. This corresponds to setting `groundPlane` to `SketchPlane3d.xy`,
+so azimuth is measured from the X axis towards the Y axis and elevation is
+measured up from the XY plane. Not related to the [classic soft drink](https://en.wikipedia.org/wiki/Orbitz_%28drink%29).
 -}
-viewpoint : Camera3d units coordinates -> Viewpoint3d units coordinates
-viewpoint (Types.Camera3d camera) =
-    camera.viewpoint
+orbitZ :
+    { focalPoint : Point3d units coordinates
+    , azimuth : Angle
+    , elevation : Angle
+    , distance : Quantity Float units
+    , projection : Projection
+    , fov : FieldOfView units
+    }
+    -> Camera3d units coordinates
+orbitZ given =
+    orbit
+        { focalPoint = given.focalPoint
+        , groundPlane = SketchPlane3d.xy
+        , azimuth = given.azimuth
+        , elevation = given.elevation
+        , distance = given.distance
+        , projection = given.projection
+        , fov = given.fov
+        }
+
+
+{-| Not actually a constructor, but a useful value (approximately 35.26 degrees)
+to use when constructing cameras using `orbit` or `orbitZ`: using this as the
+`elevation` value will result in an [isometric](#isometric) camera if
+`azimuth` is set to 45 degrees. Said another way, this is the elevation angle of
+a vector with components (1, 1, 1).
+-}
+isometricElevation : Angle
+isometricElevation =
+    Angle.atan2 (Quantity.float 1) (Quantity.float (sqrt 2))
+
+
+{-| Construct a camera looking at the given focal point, the given distance
+away, such that a set of XYZ axes at that point will appear to have:
+
+  - Z straight up
+  - X pointing to the left and 30 degrees down
+  - Y pointing to the right and 30 degrees down
+
+-}
+isometric :
+    { focalPoint : Point3d units coordinates
+    , distance : Quantity Float units
+    , projection : Projection
+    , fov : FieldOfView units
+    }
+    -> Camera3d units coordinates
+isometric given =
+    orbitZ
+        { focalPoint = given.focalPoint
+        , azimuth = Angle.degrees 45
+        , elevation = isometricElevation
+        , distance = given.distance
+        , projection = given.projection
+        , fov = given.fov
+        }
+
+
+{-| The frame of a camera is a `Frame3d` where:
+
+  - The origin point of the frame is the eye point of the camera
+  - The X direction of the frame points to the left
+  - The Y direction of the frame points up
+  - The Z direction of the frame points out of the screen
+
+-}
+frame : Camera3d units coordinates -> Frame3d units coordinates defines
+frame (Camera3d camera) =
+    Frame3d.copy camera.frame
+
+
+{-| Get the location of a camera.
+-}
+eyePoint : Camera3d units coordinates -> Point3d units coordinates
+eyePoint camera =
+    Frame3d.originPoint (frame camera)
+
+
+{-| Get the direction that a camera is looking in (the direction 'into the screen').
+-}
+viewDirection : Camera3d units coordinates -> Direction3d coordinates
+viewDirection camera =
+    Direction3d.reverse (Frame3d.zDirection (frame camera))
+
+
+{-| The view plane of a camera is a `SketchPlane3d` where:
+
+  - The origin point of the sketch plane is the eye point of the camera
+  - The X direction of the sketch plane points to the left
+  - The Y direction of the sketch plane points up
+  - The normal direction of the sketch plane points out of the screen
+
+-}
+viewPlane : Camera3d units coordinates -> SketchPlane3d units coordinates defines
+viewPlane camera =
+    Frame3d.xySketchPlane (frame camera)
+
+
+{-| The focal distance of the camera is used to convert between angle-based and height-based field
+of view. This generally corresponds to the distance from the camera to the object currently being
+looked at/focused on (which is often also the center of rotation/orbit point for the camera).
+-}
+focalDistance : Camera3d units coordinates -> Quantity Float units
+focalDistance (Camera3d camera) =
+    camera.focalDistance
+
+
+{-| Get the projection type of a camera.
+-}
+projection : Camera3d units coordinates -> Projection
+projection (Camera3d camera) =
+    camera.projection
+
+
+{-| Get a camera's vertical field of view as an angle. If necessary, this will be computed from a
+height-based field of view using the camera's focal distance.
+-}
+fovAngle : Camera3d units coordinates -> Angle
+fovAngle (Camera3d camera) =
+    camera.fovAngle
+
+
+{-| Get a camera's vertical field of view as a height. If necessary, this will be computed from an
+angle-based field of view using the camera's focal distance.
+-}
+fovHeight : Camera3d units coordinates -> Quantity Float units
+fovHeight (Camera3d camera) =
+    Quantity.twice (camera.focalDistance |> Quantity.multiplyBy (Angle.tan (Quantity.half camera.fovAngle)))
 
 
 {-| Given a camera, a rectangle defining the shape and size of a screen, and a
@@ -125,10 +442,10 @@ ray :
     -> Rectangle2d screenUnits screenCoordinates
     -> Point2d screenUnits screenCoordinates
     -> Axis3d units coordinates
-ray (Types.Camera3d camera) screen point =
+ray camera screen point =
     let
-        (Types.Viewpoint3d viewpointFrame) =
-            camera.viewpoint
+        cameraFrame =
+            frame camera
 
         ( _, screenHeight ) =
             Rectangle2d.dimensions screen
@@ -138,9 +455,12 @@ ray (Types.Camera3d camera) screen point =
 
         screenY =
             Point2d.yCoordinateIn (Rectangle2d.axes screen) point
+
+        frustumSlope =
+            Angle.tan (Quantity.half (fovAngle camera))
     in
-    case camera.projection of
-        Types.Perspective frustumSlope ->
+    case projection camera of
+        Perspective ->
             let
                 screenZ =
                     Quantity.multiplyBy 0.5 screenHeight
@@ -151,19 +471,19 @@ ray (Types.Camera3d camera) screen point =
                     Vector3d.xyz screenX screenY screenZ
                         |> Vector3d.direction
                         |> Maybe.withDefault Direction3d.negativeZ
-                        |> Direction3d.placeIn viewpointFrame
+                        |> Direction3d.placeIn cameraFrame
             in
-            Axis3d.through (Viewpoint3d.eyePoint camera.viewpoint) direction
+            Axis3d.through (eyePoint camera) direction
 
-        Types.Orthographic viewpointHeight ->
+        Orthographic ->
             let
                 resolution =
-                    viewpointHeight |> Quantity.per screenHeight
+                    fovHeight camera |> Quantity.per screenHeight
 
                 origin =
-                    Point3d.xyzIn viewpointFrame
+                    Point3d.xyzIn cameraFrame
                         (screenX |> Quantity.at resolution)
                         (screenY |> Quantity.at resolution)
                         Quantity.zero
             in
-            Axis3d.through origin (Viewpoint3d.viewDirection camera.viewpoint)
+            Axis3d.through origin (viewDirection camera)

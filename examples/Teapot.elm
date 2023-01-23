@@ -5,7 +5,6 @@ import Axis2d
 import Axis3d exposing (Axis3d)
 import Browser
 import Browser.Dom
-import WebGL.Matrices as WebGL
 import Browser.Events
 import Camera3d exposing (Camera3d)
 import Direction2d exposing (Direction2d)
@@ -33,8 +32,8 @@ import SketchPlane3d exposing (SketchPlane3d)
 import Task
 import Vector2d exposing (Vector2d)
 import Vector3d exposing (Vector3d)
-import Viewpoint3d
 import WebGL exposing (Mesh)
+import WebGL.Matrices as WebGL
 
 
 
@@ -207,14 +206,12 @@ meshDecoder =
 
 camera : Camera3d ModelUnits WorldCoordinates
 camera =
-    Camera3d.perspective
-        { viewpoint =
-            Viewpoint3d.lookAt
-                { eyePoint = Point3d.xyz (modelUnits 15) zero zero
-                , focalPoint = Point3d.origin
-                , upDirection = Direction3d.positiveZ
-                }
-        , verticalFieldOfView = Angle.degrees 30
+    Camera3d.lookAt
+        { eyePoint = Point3d.xyz (modelUnits 15) zero zero
+        , focalPoint = Point3d.origin
+        , upDirection = Direction3d.positiveZ
+        , fov = Camera3d.angle (Angle.degrees 30)
+        , projection = Camera3d.Perspective
         }
 
 
@@ -269,7 +266,7 @@ entity mesh placementFrame windowSize =
                     , farClipDepth = modelUnits 100
                     }
             , modelMatrix = WebGL.modelMatrix placementFrame
-            , viewMatrix = WebGL.viewMatrix (Camera3d.viewpoint camera)
+            , viewMatrix = WebGL.viewMatrix camera
             , lightDirection = Direction3d.toVec3 lightDirection
             , faceColor = faceColor
             }

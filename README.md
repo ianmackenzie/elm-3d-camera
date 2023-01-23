@@ -13,42 +13,25 @@ and has two main goals:
 
 ## Defining cameras
 
-To define a camera, you first create a viewpoint which represents the position
-and orientation of the camera:
+The functions in this package let you construct perspective or orthographic cameras in various different ways, for example:
 
 ```elm
-import Viewpoint3d
-import Point3d
-import Direction3d
-
-cameraViewpoint =
-    Viewpoint3d.lookAt
-        { eyePoint = Point3d.meters 10 0 5
-        , focalPoint = Point3d.origin
-        , upDirection = Direction3d.positiveZ
-        }
-```
-
-You can then create either a perspective or orthographic camera from the
-viewpoint:
-
-```elm
-import Camera3d
 import Angle
+import Camera3d
 import Length
+import Point3d
 
 perspectiveCamera =
-    Camera3d.perspective
-        { viewpoint = cameraViewpoint
-        , verticalFieldOfView = Angle.degrees 30
-        }
-
-orthographicCamera =
-    Camera3d.orthographic
-        { viewpoint = cameraViewpoint
-        , viewportHeight = Length.meters 5
+    Camera3d.lookAt
+        { eyePoint = Point3d.meters 4 0 3
+        , focalPoint = Point3d.origin
+        , upDirection = Direction3d.positiveZ
+        , projection = Camera3d.Perspective
+        , fov = Camera3d.angle (Angle.degrees 30)
         }
 ```
+
+Note that there are no functions for transforming (translating, rotating etc.) cameras - they are intended to be 'throwaway' values that you would construct on the fly when doing some rendering. For example, if in the above code you wanted to have an animated camera that tracked some moving object, you might store the camera and object positions in your model as `Point3d` values but then recreate the actual `Camera3d` value every frame.
 
 ## WebGL rendering
 

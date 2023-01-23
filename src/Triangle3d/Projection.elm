@@ -14,7 +14,6 @@ import Rectangle2d exposing (Rectangle2d)
 import Triangle2d exposing (Triangle2d)
 import Triangle3d exposing (Triangle3d)
 import Vector3d
-import Viewpoint3d
 
 
 {-| Project a triangle from 3D world to 2D screen coordinates. Equivalent
@@ -47,11 +46,8 @@ isFrontFacing camera triangle =
     case Triangle3d.normalDirection triangle of
         Just normalDirection ->
             let
-                viewpoint =
-                    Camera3d.viewpoint camera
-
                 eyePoint =
-                    Viewpoint3d.eyePoint viewpoint
+                    Camera3d.eyePoint camera
 
                 ( p1, _, _ ) =
                     Triangle3d.vertices triangle

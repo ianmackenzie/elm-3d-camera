@@ -22,13 +22,12 @@ scenes. For in-depth explanations of how they are used, check out:
 
 -}
 
+import Angle
 import Camera3d exposing (Camera3d)
-import Camera3d.Types as Types
 import Frame3d exposing (Frame3d)
 import Geometry.Interop.LinearAlgebra.Frame3d as Frame3d
 import Math.Matrix4 exposing (Mat4)
 import Quantity exposing (Quantity(..))
-import Viewpoint3d exposing (Viewpoint3d)
 
 
 {-| Construct a WebGL model matrix given a `Frame3d` that defines the position
@@ -45,21 +44,21 @@ modelMatrix frame =
     Frame3d.toMat4 frame
 
 
-{-| Construct a WebGL view matrix for a given viewpoint. Multiplying by this
+{-| Construct a WebGL view matrix for a given camera. Multiplying by this
 matrix transforms from world coordinates to view (eye) coordinates.
 
-Note that to avoid accuracy/roundoff issues (especially if both the viewpoint
+Note that to avoid accuracy/roundoff issues (especially if both the camera
 and rendered objects are far from the world origin point), it is often better to
 use [`modelViewMatrix`](#modelViewMatrix) instead of calling `modelMatrix` and
 `viewMatrix` separately.
 
 -}
-viewMatrix : Viewpoint3d units coordinates -> Mat4
+viewMatrix : Camera3d units coordinates -> Mat4
 viewMatrix camera =
     modelViewMatrix Frame3d.atOrigin camera
 
 
-{-| Construct a WebGL model-view matrix given a viewpoint and a `Frame3d` that
+{-| Construct a WebGL model-view matrix given a camera and a `Frame3d` that
 defines the position and orientation of an object.
 
 Multiplying by this matrix transforms from local object coordinates (coordinates
@@ -69,9 +68,9 @@ world coordinates improves accuracy, especially if both the object and camera
 are far from the world origin point.
 
 -}
-modelViewMatrix : Frame3d units coordinates defines -> Viewpoint3d units coordinates -> Mat4
-modelViewMatrix modelFrame (Types.Viewpoint3d viewpointFrame) =
-    Frame3d.toMat4 (modelFrame |> Frame3d.relativeTo viewpointFrame)
+modelViewMatrix : Frame3d units coordinates defines -> Camera3d units coordinates -> Mat4
+modelViewMatrix modelFrame camera =
+    Frame3d.toMat4 (modelFrame |> Frame3d.relativeTo (Camera3d.frame camera))
 
 
 {-| Construct a WebGL projection matrix for a given camera, by supplying near
@@ -96,16 +95,19 @@ projectionMatrix :
         , aspectRatio : Float
         }
     -> Mat4
-projectionMatrix (Types.Camera3d camera) { nearClipDepth, farClipDepth, aspectRatio } =
+projectionMatrix camera { nearClipDepth, farClipDepth, aspectRatio } =
     let
         (Quantity n) =
             Quantity.abs nearClipDepth
 
         (Quantity f) =
             Quantity.abs farClipDepth
+
+        frustumSlope =
+            Angle.tan (Quantity.half (Camera3d.fovAngle camera))
     in
-    case camera.projection of
-        Types.Perspective frustumSlope ->
+    case Camera3d.projection camera of
+        Camera3d.Perspective ->
             if isInfinite f then
                 Math.Matrix4.fromRecord
                     { m11 = 1 / (aspectRatio * frustumSlope)
@@ -146,7 +148,12 @@ projectionMatrix (Types.Camera3d camera) { nearClipDepth, farClipDepth, aspectRa
                     , m44 = 0
                     }
 
-        Types.Orthographic (Quantity viewportHeight) ->
+        Camera3d.Orthographic ->
+            let
+                (Quantity viewportHeight) =
+                    Quantity.twice
+                        (Camera3d.focalDistance camera |> Quantity.multiplyBy frustumSlope)
+            in
             if isInfinite f then
                 Math.Matrix4.fromRecord
                     { m11 = 2 / (aspectRatio * viewportHeight)
@@ -203,7 +210,7 @@ viewProjectionMatrix :
 viewProjectionMatrix camera projectionParameters =
     Math.Matrix4.mul
         (projectionMatrix camera projectionParameters)
-        (viewMatrix (Camera3d.viewpoint camera))
+        (viewMatrix camera)
 
 
 {-| Construct a WebGL model-view-projection matrix for a given camera; this is
@@ -222,4 +229,4 @@ modelViewProjectionMatrix :
 modelViewProjectionMatrix modelFrame camera projectionParameters =
     Math.Matrix4.mul
         (projectionMatrix camera projectionParameters)
-        (modelViewMatrix modelFrame (Camera3d.viewpoint camera))
+        (modelViewMatrix modelFrame camera)

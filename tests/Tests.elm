@@ -16,7 +16,6 @@ import Point3d.Projection as Point3d
 import Quantity exposing (Quantity, Unitless)
 import Rectangle2d exposing (Rectangle2d)
 import Test exposing (Test)
-import Viewpoint3d
 import WebGL.Matrices as WebGL
 
 
@@ -41,14 +40,11 @@ ndcToScreen screenRectangle ndcPoint =
 validPoint : Camera3d Meters WorldCoordinates -> Point3d Meters WorldCoordinates -> Bool
 validPoint camera point =
     let
-        viewpoint =
-            Camera3d.viewpoint camera
-
         eyePoint =
-            Viewpoint3d.eyePoint viewpoint
+            Camera3d.eyePoint camera
 
         viewDirection =
-            Viewpoint3d.viewDirection viewpoint
+            Camera3d.viewDirection camera
 
         viewPlane =
             Plane3d.through eyePoint viewDirection
@@ -122,7 +118,7 @@ suite =
                             Point3d.toScreenSpace camera screen point
 
                         viewMatrix =
-                            WebGL.viewMatrix (Camera3d.viewpoint camera)
+                            WebGL.viewMatrix camera
 
                         projectionMatrix =
                             WebGL.projectionMatrix camera
@@ -176,8 +172,7 @@ suite =
                             Point3d.toScreenSpace camera screen globalPoint
 
                         modelViewMatrix =
-                            WebGL.modelViewMatrix modelFrame
-                                (Camera3d.viewpoint camera)
+                            WebGL.modelViewMatrix modelFrame camera
 
                         projectionMatrix =
                             WebGL.projectionMatrix camera
@@ -206,8 +201,7 @@ suite =
                 if validPoint camera globalPoint then
                     let
                         modelViewMatrix =
-                            WebGL.modelViewMatrix modelFrame
-                                (Camera3d.viewpoint camera)
+                            WebGL.modelViewMatrix modelFrame camera
 
                         projectionMatrix =
                             WebGL.projectionMatrix camera

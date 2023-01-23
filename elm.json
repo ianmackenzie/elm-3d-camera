@@ -3,10 +3,9 @@
     "name": "ianmackenzie/elm-3d-camera",
     "summary": "Camera type for 3D rendering and projection",
     "license": "MPL-2.0",
-    "version": "3.1.0",
+    "version": "4.0.0",
     "exposed-modules": [
         "Camera3d",
-        "Viewpoint3d",
         "Point3d.Projection",
         "LineSegment3d.Projection",
         "Triangle3d.Projection",

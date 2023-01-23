@@ -6,8 +6,8 @@ module Point3d.Projection exposing (depth, toScreenSpace)
 
 -}
 
+import Angle
 import Camera3d exposing (Camera3d)
-import Camera3d.Types as Types
 import Point2d exposing (Point2d)
 import Point3d exposing (Point3d)
 import Quantity exposing (Quantity)
@@ -25,12 +25,12 @@ for points behind.
 
 -}
 depth : Camera3d units coordinates -> Point3d units coordinates -> Quantity Float units
-depth (Types.Camera3d camera) point =
+depth camera point =
     let
-        (Types.Viewpoint3d viewpointFrame) =
-            camera.viewpoint
+        cameraFrame =
+            Camera3d.frame camera
     in
-    Quantity.negate (Point3d.zCoordinateIn viewpointFrame point)
+    Quantity.negate (Point3d.zCoordinateIn cameraFrame point)
 
 
 {-| Project a point from 3D world to 2D screen coordinates, by supplying a
@@ -46,19 +46,19 @@ toScreenSpace :
     -> Rectangle2d screenUnits screenCoordinates
     -> Point3d worldUnits worldCoordinates
     -> Point2d screenUnits screenCoordinates
-toScreenSpace (Types.Camera3d camera) screen point =
+toScreenSpace camera screen point =
     let
-        (Types.Viewpoint3d viewpointFrame) =
-            camera.viewpoint
+        cameraFrame =
+            Camera3d.frame camera
 
         viewX =
-            Point3d.xCoordinateIn viewpointFrame point
+            Point3d.xCoordinateIn cameraFrame point
 
         viewY =
-            Point3d.yCoordinateIn viewpointFrame point
+            Point3d.yCoordinateIn cameraFrame point
 
         viewZ =
-            Point3d.zCoordinateIn viewpointFrame point
+            Point3d.zCoordinateIn cameraFrame point
 
         pointDepth =
             Quantity.negate viewZ
@@ -68,9 +68,12 @@ toScreenSpace (Types.Camera3d camera) screen point =
 
         aspectRatio =
             Quantity.ratio screenWidth screenHeight
+
+        frustumSlope =
+            Angle.tan (Quantity.half (Camera3d.fovAngle camera))
     in
-    case camera.projection of
-        Types.Perspective frustumSlope ->
+    case Camera3d.projection camera of
+        Camera3d.Perspective ->
             let
                 ndcY =
                     Quantity.ratio viewY pointDepth / frustumSlope
@@ -83,8 +86,11 @@ toScreenSpace (Types.Camera3d camera) screen point =
                 (Quantity.multiplyBy (ndcX / 2) screenWidth)
                 (Quantity.multiplyBy (ndcY / 2) screenHeight)
 
-        Types.Orthographic viewportHeight ->
+        Camera3d.Orthographic ->
             let
+                viewportHeight =
+                    Camera3d.fovHeight camera
+
                 halfNdcY =
                     Quantity.ratio viewY viewportHeight
 

@@ -1,4 +1,4 @@
-module Overlay exposing (Model, Msg(..), ProjectionType(..), main, update, view)
+module Overlay exposing (main)
 
 import Angle
 import Axis3d
@@ -24,32 +24,26 @@ import Point3d
 import Point3d.Projection as Point3d
 import Quantity exposing (zero)
 import Rectangle2d
-import Viewpoint3d
-
-
-type ProjectionType
-    = Perspective
-    | Orthographic
 
 
 type Msg
     = SetAngleInDegrees Float
-    | SetProjectionType ProjectionType
+    | SetProjectionType Camera3d.Projection
 
 
 type alias Model =
     { angleInDegrees : Float
-    , projectionType : ProjectionType
+    , projectionType : Camera3d.Projection
     }
 
 
-projectionTypeString : ProjectionType -> String
+projectionTypeString : Camera3d.Projection -> String
 projectionTypeString projectionType =
     case projectionType of
-        Perspective ->
+        Camera3d.Perspective ->
             "Perspective"
 
-        Orthographic ->
+        Camera3d.Orthographic ->
             "Orthographic"
 
 
@@ -84,26 +78,14 @@ view { angleInDegrees, projectionType } =
                 |> Point3d.rotateAround Axis3d.y (Angle.degrees -22.5)
                 |> Point3d.rotateAround Axis3d.z (Angle.degrees 60)
 
-        viewpoint =
-            Viewpoint3d.lookAt
+        camera =
+            Camera3d.lookAt
                 { focalPoint = Point3d.origin
                 , eyePoint = eyePoint
                 , upDirection = Direction3d.z
+                , projection = projectionType
+                , fov = Camera3d.angle (Angle.degrees 30)
                 }
-
-        camera =
-            case projectionType of
-                Perspective ->
-                    Camera3d.perspective
-                        { viewpoint = viewpoint
-                        , verticalFieldOfView = Angle.degrees 30
-                        }
-
-                Orthographic ->
-                    Camera3d.orthographic
-                        { viewpoint = viewpoint
-                        , viewportHeight = logoUnits 2
-                        }
 
         angle =
             Angle.degrees angleInDegrees
@@ -141,22 +123,20 @@ view { angleInDegrees, projectionType } =
                     )
 
         drawingBounds =
-            BoundingBox2d.fromExtrema
-                { minX = zero
-                , minY = zero
-                , maxX = pixels 800
-                , maxY = pixels 600
+            Rectangle2d.with
+                { x1 = zero
+                , y1 = zero
+                , x2 = pixels 800
+                , y2 = pixels 600
                 }
 
         drawingElement =
-            Drawing2d.toHtml
+            Drawing2d.draw
                 { viewBox = drawingBounds
-                , size = Drawing2d.fixed 
+                , entities =
+                    Drawing2d.rectangle [ Drawing2d.noFill ] screen
+                        :: (drawingLines ++ drawingCircles)
                 }
-                []
-                (Drawing2d.rectangle [ Drawing2d.noFill ] screen
-                    :: (drawingLines ++ drawingCircles)
-                )
 
         slider =
             Element.el [ Element.paddingXY 0 6 ] <|
@@ -190,8 +170,8 @@ view { angleInDegrees, projectionType } =
                     Element.Input.labelAbove []
                         (Element.text "Projection type")
                 , options =
-                    [ radioOption Perspective
-                    , radioOption Orthographic
+                    [ radioOption Camera3d.Perspective
+                    , radioOption Camera3d.Orthographic
                     ]
                 }
     in
@@ -207,7 +187,7 @@ view { angleInDegrees, projectionType } =
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = { angleInDegrees = 0.0, projectionType = Perspective }
+        { init = { angleInDegrees = 0.0, projectionType = Camera3d.Perspective }
         , view = view
         , update = update
         }
