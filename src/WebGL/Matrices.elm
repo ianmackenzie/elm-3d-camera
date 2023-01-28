@@ -104,7 +104,7 @@ projectionMatrix camera { nearClipDepth, farClipDepth, aspectRatio } =
             Quantity.abs farClipDepth
 
         frustumSlope =
-            Angle.tan (Quantity.half (Camera3d.fovAngle camera))
+            Camera3d.frustumSlope camera
     in
     case Camera3d.projection camera of
         Camera3d.Perspective ->

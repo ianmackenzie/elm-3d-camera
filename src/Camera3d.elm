@@ -3,6 +3,7 @@ module Camera3d exposing
     , lookAt, orbit, orbitZ, isometric, isometricElevation, with
     , eyePoint, viewDirection, viewPlane, frame, focalDistance, projection, fovAngle, fovHeight
     , ray
+    , frustumSlope
     )
 
 {-| A `Camera3d` is a perspective or orthographic camera in 3D space. This
@@ -29,6 +30,11 @@ module contains functions for:
 # Ray casting
 
 @docs ray
+
+
+# Advanced
+
+@docs frustumSlope
 
 -}
 
@@ -417,12 +423,20 @@ fovAngle (Camera3d camera) =
     camera.fovAngle
 
 
+{-| Half the [`fovAngle`](#fovAngle), expressed as a slope instead of an angle. This is useful for
+various low-level camera operations such as computing projection matrices.
+-}
+frustumSlope : Camera3d units coordinates -> Float
+frustumSlope camera =
+    Angle.tan (Quantity.half (fovAngle camera))
+
+
 {-| Get a camera's vertical field of view as a height. If necessary, this will be computed from an
 angle-based field of view using the camera's focal distance.
 -}
 fovHeight : Camera3d units coordinates -> Quantity Float units
-fovHeight (Camera3d camera) =
-    Quantity.twice (camera.focalDistance |> Quantity.multiplyBy (Angle.tan (Quantity.half camera.fovAngle)))
+fovHeight camera =
+    Quantity.twice (focalDistance camera |> Quantity.multiplyBy (frustumSlope camera))
 
 
 {-| Given a camera, a rectangle defining the shape and size of a screen, and a
@@ -455,16 +469,13 @@ ray camera screen point =
 
         screenY =
             Point2d.yCoordinateIn (Rectangle2d.axes screen) point
-
-        frustumSlope =
-            Angle.tan (Quantity.half (fovAngle camera))
     in
     case projection camera of
         Perspective ->
             let
                 screenZ =
-                    Quantity.multiplyBy 0.5 screenHeight
-                        |> Quantity.divideBy frustumSlope
+                    Quantity.half screenHeight
+                        |> Quantity.divideBy (frustumSlope camera)
                         |> Quantity.negate
 
                 direction =
