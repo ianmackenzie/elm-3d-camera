@@ -150,18 +150,17 @@ projectionMatrix camera { nearClipDepth, farClipDepth, aspectRatio } =
 
         Camera3d.Orthographic ->
             let
-                (Quantity viewportHeight) =
-                    Quantity.twice
-                        (Camera3d.focalDistance camera |> Quantity.multiplyBy frustumSlope)
+                (Quantity h) =
+                    Camera3d.fovHeight camera
             in
             if isInfinite f then
                 Math.Matrix4.fromRecord
-                    { m11 = 2 / (aspectRatio * viewportHeight)
+                    { m11 = 2 / (aspectRatio * h)
                     , m21 = 0
                     , m31 = 0
                     , m41 = 0
                     , m12 = 0
-                    , m22 = 2 / viewportHeight
+                    , m22 = 2 / h
                     , m32 = 0
                     , m42 = 0
                     , m13 = 0
@@ -176,12 +175,12 @@ projectionMatrix camera { nearClipDepth, farClipDepth, aspectRatio } =
 
             else
                 Math.Matrix4.fromRecord
-                    { m11 = 2 / (aspectRatio * viewportHeight)
+                    { m11 = 2 / (aspectRatio * h)
                     , m21 = 0
                     , m31 = 0
                     , m41 = 0
                     , m12 = 0
-                    , m22 = 2 / viewportHeight
+                    , m22 = 2 / h
                     , m32 = 0
                     , m42 = 0
                     , m13 = 0
