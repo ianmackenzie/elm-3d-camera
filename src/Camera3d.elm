@@ -77,10 +77,10 @@ height, or vice versa:
 ![Field of view](https://ianmackenzie.github.io/elm-3d-camera/4.0.0/fov.png)
 
 All the camera construction functions in this module either compute the focal distance
-automatically (e.g. as the distance from an eye point to a focal point), or (in the case of `with`)
-require you to provide on explicitly. As a result, this module allows you to specify field of view
-as either an angle or a height for either perspective or orthographic cameras, and any necessary
-conversions will be done automatically.
+automatically (e.g. as the distance from an eye point to a focal point), or (in the case of the
+[`with`](#with) constructor) require you to provide on explicitly. As a result, this module allows
+you to specify field of view as either an angle or a height for either perspective or orthographic
+cameras, and any necessary conversions will be done automatically.
 
 -}
 type FieldOfView units
