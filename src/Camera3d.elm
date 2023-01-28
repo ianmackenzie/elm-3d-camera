@@ -6,13 +6,12 @@ module Camera3d exposing
     , frustumSlope
     )
 
-{-| A `Camera3d` is a perspective or orthographic camera in 3D space. This
-module contains functions for:
+{-| A `Camera3d` is a perspective or orthographic camera in 3D space. This module contains functions
+for:
 
-  - Defining perspective and orthographic cameras
-  - Obtaining view and projection matrices for a given camera, which can then be
-    used for WebGL rendering
-  - Using cameras to project 3D geometry to 2D screen space
+  - Constructing cameras in various ways
+  - Extracting properties such as the view direction and view plane of the camera
+  - Constructing 3D 'pick rays' based on a given camera and 2D click position
 
 @docs Camera3d, Projection, FieldOfView, angle, height
 
@@ -69,18 +68,19 @@ type Projection
 
 
 {-| Defines the vertical [field of view](https://en.wikipedia.org/wiki/Field_of_view) of a camera.
-This is usually defined as an angle, but can also be defined as a height:
+Strictly speaking, for a perspective camera the field of view should be defined as an angle and
+for an orthographic camera it should be defined as a height. Practically speaking, however, it is
+usually possible (and often useful) to convert between the two. Given a focal distance it is
+possible (with a bit of trigonometry) to compute the field of view angle from the field of view
+height, or vice versa:
 
-  - When using perspective projection, field of view is defined as an angle but that angle can be
-    computed given a focal distance and the desired object height to be visible at that focal
-    distance.
-  - Conversely, when using orthographic projection, field of view is defined as a height but that
-    height can be computed given a focal distance and the angular field of view at that focal
-    distance.
+![Field of view](https://ianmackenzie.github.io/elm-3d-camera/4.0.0/fov.png)
 
-As a result, this module allows you to specify field of view as either an angle or a height for
-either perspective or orthographic cameras, and any necessary conversions will be done
-automatically.
+All the camera construction functions in this module either compute the focal distance
+automatically (e.g. as the distance from an eye point to a focal point), or (in the case of `with`)
+require you to provide on explicitly. As a result, this module allows you to specify field of view
+as either an angle or a height for either perspective or orthographic cameras, and any necessary
+conversions will be done automatically.
 
 -}
 type FieldOfView units
@@ -88,14 +88,16 @@ type FieldOfView units
     | Height (Quantity Float units)
 
 
-{-| Specify vertical field of view as an angle.
+{-| Specify vertical field of view as an angle. For an orthographic camera, this will be converted
+to a height at the camera's focal distance.
 -}
 angle : Angle -> FieldOfView units
 angle givenAngle =
     Angle givenAngle
 
 
-{-| Specify vertical field of view as a height.
+{-| Specify vertical field of view as a height. For a perspective camera, this will be converted to
+an angle at the camera's focal distance.
 -}
 height : Quantity Float units -> FieldOfView units
 height givenHeight =
@@ -140,7 +142,7 @@ with given =
 {-| Construct a `Camera3d` at the given eye point looking towards the given
 focal point, with the given global up direction (which will typically be
 `Direction3d.positiveZ` or `Direction3d.positiveY`). The focal distance will
-be computed as the distance from the eye point to the forcal point. For
+be computed as the distance from the eye point to the focal point. For
 example, to construct a camera at the point (10, 0, 5) looking towards the
 origin:
 
@@ -439,8 +441,8 @@ fovHeight camera =
     Quantity.twice (focalDistance camera |> Quantity.multiplyBy (frustumSlope camera))
 
 
-{-| Given a camera, a rectangle defining the shape and size of a screen, and a
-2D point within that screen, calculate the corresponding 3D ray as an `Axis3d`.
+{-| Given a camera, [a rectangle defining the shape and size of a screen](https://package.elm-lang.org/packages/ianmackenzie/elm-3d-camera/latest/#projection-to-screen-space),
+and a 2D point within that screen, calculate the corresponding 3D ray as an `Axis3d`.
 Conceptually, the ray will pass through the given point on the screen and will
 have direction equal to the viewing direction at that point.
 

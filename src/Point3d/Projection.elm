@@ -33,9 +33,9 @@ depth camera point =
     Quantity.negate (Point3d.zCoordinateIn cameraFrame point)
 
 
-{-| Project a point from 3D world to 2D screen coordinates, by supplying a
-rectangle that defines the shape and size of the screen. Points directly ahead
-of the camera will end up in the center of the given screen rectangle.
+{-| Project a point from 3D world to 2D screen coordinates, by supplying
+[a rectangle defining the shape and size of a screen](https://package.elm-lang.org/packages/ianmackenzie/elm-3d-camera/latest/#projection-to-screen-space).
+Points directly ahead of the camera will end up in the center of the given screen rectangle.
 
 Note that the projected 2D point may be outside the given rectangle, if the
 given 3D point is outside the field of view of the given camera.
