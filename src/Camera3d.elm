@@ -49,7 +49,10 @@ import SketchPlane3d exposing (SketchPlane3d)
 import Vector3d
 
 
-{-| A camera in 3D space.
+{-| A camera in 3D space, using particular units
+(usually [meters](https://package.elm-lang.org/packages/ianmackenzie/elm-units/latest/Length#Meters))
+within a particular [coordinate system](https://github.com/ianmackenzie/elm-geometry#coordinate-systems)
+(generally a user-defined type like `WorldCoordinates`).
 -}
 type Camera3d units coordinates
     = Camera3d
