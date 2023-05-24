@@ -73,17 +73,20 @@ type Projection
 {-| Defines the vertical [field of view](https://en.wikipedia.org/wiki/Field_of_view) of a camera.
 Strictly speaking, for a perspective camera the field of view should be defined as an angle and
 for an orthographic camera it should be defined as a height. Practically speaking, however, it is
-usually possible (and often useful) to convert between the two. Given a focal distance it is
-possible (with a bit of trigonometry) to compute the field of view angle from the field of view
-height, or vice versa:
+usually possible (and often useful) to convert between the two.
+
+Given a focal distance it is possible (with a bit of trigonometry) to compute the field of view
+angle from the field of view height, or vice versa:
 
 ![Field of view](https://ianmackenzie.github.io/elm-3d-camera/4.0.0/fov.png)
 
 All the camera construction functions in this module either compute the focal distance
 automatically (e.g. as the distance from an eye point to a focal point), or (in the case of the
-[`with`](#with) constructor) require you to provide one explicitly. As a result, this module allows
-you to specify field of view as either an angle or a height for either perspective or orthographic
-cameras, and any necessary conversions will be done automatically.
+[`with`](#with) constructor) require you to provide one explicitly.
+
+As a result, this module allows you to specify field of view as either an angle or a height for
+either perspective or orthographic cameras, and any necessary conversions will be done
+automatically.
 
 -}
 type FieldOfView units
