@@ -1,3 +1,17 @@
+## NOTE
+
+[`elm-3d-scene`](http://package.elm-lang.org/packages/ianmackenzie/elm-3d-scene/latest)
+has not yet been updated to use `elm-3d-camera` 4.x, so in the meantime to avoid version conflicts
+you'll likely want to install `elm-3d-scene` before `elm-3d-camera`, e.g.
+
+```
+elm install ianmackenzie/elm-3d-scene
+elm install ianmackenzie/elm-3d-camera
+```
+
+If you do run into a problem, try manually adjusting the version of `elm-3d-camera` in `elm.json` to
+3.1.0 instead of 4.0.0.
+
 # elm-3d-camera
 
 This package provides convenient ways to define and use perspective and
