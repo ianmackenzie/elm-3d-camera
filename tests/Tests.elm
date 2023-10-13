@@ -1,12 +1,11 @@
 module Tests exposing (suite)
 
 import Camera3d exposing (Camera3d)
-import Camera3d.Fuzz as Fuzz exposing (ScreenCoordinates, WorldCoordinates)
+import Camera3d.Random as Random exposing (ScreenCoordinates, WorldCoordinates)
 import Expect
-import Fuzz exposing (Fuzzer)
 import Geometry.Expect as Expect
-import Geometry.Fuzz as Fuzz
 import Geometry.Interop.LinearAlgebra.Point3d as Point3d
+import Geometry.Random as Random
 import Length exposing (Meters)
 import Pixels exposing (Pixels)
 import Plane3d
@@ -14,8 +13,10 @@ import Point2d exposing (Point2d)
 import Point3d exposing (Point3d)
 import Point3d.Projection as Point3d
 import Quantity exposing (Quantity, Unitless)
+import Random exposing (Generator)
 import Rectangle2d exposing (Rectangle2d)
 import Test exposing (Test)
+import Test.Random as Test
 import WebGL.Matrices as WebGL
 
 
@@ -70,29 +71,29 @@ projectionParameters screen =
     }
 
 
-genericTestCase : Fuzzer { camera : Camera3d Meters WorldCoordinates, point : Point3d Meters pointCoordinates, screen : Rectangle2d Pixels ScreenCoordinates }
+genericTestCase : Generator { camera : Camera3d Meters WorldCoordinates, point : Point3d Meters pointCoordinates, screen : Rectangle2d Pixels ScreenCoordinates }
 genericTestCase =
-    Fuzz.map3
+    Random.map3
         (\camera point screen ->
             { camera = camera
             , point = point
             , screen = screen
             }
         )
-        Fuzz.camera
-        Fuzz.point3d
-        Fuzz.screen
+        Random.camera
+        Random.point3d
+        Random.screen
 
 
 rayTestCase :
-    Fuzzer
+    Generator
         { camera : Camera3d Meters WorldCoordinates
         , point2d : Point2d Pixels ScreenCoordinates
         , screen : Rectangle2d Pixels ScreenCoordinates
         , distance : Quantity Float Meters
         }
 rayTestCase =
-    Fuzz.map4
+    Random.map4
         (\camera screen ( u, v ) distance ->
             { camera = camera
             , point2d = Rectangle2d.interpolate screen u v
@@ -100,17 +101,17 @@ rayTestCase =
             , distance = distance
             }
         )
-        Fuzz.camera
-        Fuzz.screen
-        (Fuzz.tuple ( Fuzz.parameterValue, Fuzz.parameterValue ))
-        (Fuzz.quantityRange (Length.meters 1) (Length.meters 10))
+        Random.camera
+        Random.screen
+        (Random.map2 Tuple.pair Random.parameterValue Random.parameterValue)
+        (Random.map Length.meters (Random.float 1 10))
 
 
 suite : Test
 suite =
     Test.describe "elm-3d-camera"
-        [ Test.fuzz genericTestCase
-            "viewMatrix/projectionMatrix and toScreenSpace are consistent"
+        [ Test.check "viewMatrix/projectionMatrix and toScreenSpace are consistent"
+            genericTestCase
             (\{ camera, point, screen } ->
                 if validPoint camera point then
                     let
@@ -135,8 +136,8 @@ suite =
                 else
                     Expect.pass
             )
-        , Test.fuzz genericTestCase
-            "viewProjectionMatrix and toScreenSpace are consistent"
+        , Test.check "viewProjectionMatrix and toScreenSpace are consistent"
+            genericTestCase
             (\{ camera, point, screen } ->
                 if validPoint camera point then
                     let
@@ -157,10 +158,9 @@ suite =
                 else
                     Expect.pass
             )
-        , Test.fuzz2
+        , Test.check2 "modelViewMatrix/projectionMatrix and placeIn/toScreenSpace are consistent"
             genericTestCase
-            Fuzz.frame3d
-            "modelViewMatrix/projectionMatrix and placeIn/toScreenSpace are consistent"
+            Random.frame3d
             (\{ camera, point, screen } modelFrame ->
                 let
                     globalPoint =
@@ -189,10 +189,9 @@ suite =
                 else
                     Expect.pass
             )
-        , Test.fuzz2
+        , Test.check2 "modelViewMatrix/projectionMatrix and modelViewProjectionMatrix are consistent"
             genericTestCase
-            Fuzz.frame3d
-            "modelViewMatrix/projectionMatrix and modelViewProjectionMatrix are consistent"
+            Random.frame3d
             (\{ camera, point, screen } modelFrame ->
                 let
                     globalPoint =
@@ -229,9 +228,8 @@ suite =
                 else
                     Expect.pass
             )
-        , Test.fuzz
+        , Test.check "ray and toScreenSpace are consistent"
             rayTestCase
-            "ray and toScreenSpace are consistent"
             (\{ camera, screen, point2d, distance } ->
                 let
                     ray =
